@@ -1,0 +1,121 @@
+---
+title: Basic Types
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+ The basic types are String, Number, Boolean, Symbol, and BigInt.
+- Strings can be delimited by single quotes, double quotes, or backticks.
+- Numbers can be integers or floating-point numbers. (They are always 64-bit floating-point numbers.)
+- Booleans can be true or false.
+- Symbols are unique and immutable values, often used as object property keys.
+- BigInt is a built-in object that provides a way to represent whole numbers larger than 2^53 - 1.
+
+## Declaring Instances of Types
+
+You have to declare a variable or constant before it can be used in TypeScript.
+
+### Using `const`
+You can use the `const` variable to create a name for a value that cannot be reassigned.
+
+When you use `const` you *must* initialize the value.
+
+```typescript del={"X":10} showLineNumbers
+    const name: string = "John Doe";
+    const name1: string = 'John Doe';
+    const name2: string = `Jane Doe`;
+    const age: number = 19;
+    const average:number = 19.23587;
+    const isActive: boolean = true;
+    const s:symbol = Symbol();
+    const weight: bigint = BigInt(1000);
+
+    name = 'Puttintane';
+```
+
+<Aside type="caution">
+`const` does not make a value immutable, it just makes it so you can't reassign a value to that variable.
+For example, a `const` array can still have its elements changed, and a `const` object can still have its properties modified.
+```typescript
+const arr = [1, 2, 3];
+arr.push(4); // This is allowed
+const obj = { name: 'John' };
+obj.name = 'Jane'; // This is also allowed
+```
+</Aside>
+
+### Using `let`
+
+Let creates a name for a changeable value. In other words, you can reassign a value (of a compatible type) to this name without error.
+
+With `let` variables you *may* initialize them, or defer initializtion until later.
+
+```typescript showLineNumbers
+let name: string = 'Joe';
+const age:number = 22;
+name = 'Joseph';
+
+let message:
+if(age >= 21) {
+    message = 'Let them in';
+} else {
+    message = 'Turn them away';
+}
+console.log(message);
+```
+
+### Initialized `const` or `let` Values Type Can Be Inferred
+
+TypeScript will infer the type of an initialized variable, so you don't have to do it.
+
+```diff typescript
+-   const name: string = "John Doe";
++   const name = "John Doe";
+
+-   const age: number = 19;
++   const age = 19;
+
+-   const isActive: boolean = true;
++   const isActive = true;
+
+-   let hourlyRate:number = 12.22;
++   let hourlyRate = 12.22;
+```
+
+## Unknown and Any Types 
+
+The `unknown` type is a type-safe counterpart to `any`. It can hold any value, but you must perform some type of checking before you can use it.
+The `any` type can hold any value, but it does not provide type safety, meaning you can use it without any checks.
+
+```typescript showLineNumbers
+let value: unknown;
+value = "Hello, world!";
+value = 42;
+value = true;
+value = { name: "Alice" };
+value = [1, 2, 3];
+// To use the value, you must check its type first
+if (typeof value === "string") {
+    console.log(value.toUpperCase()); // This is safe
+} else if (typeof value === "number") {
+    console.log(value.toFixed(2)); // This is also safe
+} else {
+    console.log("Value is not a string or number");
+}
+let anyValue: any;
+anyValue = "Hello, world!";
+anyValue = 42;
+anyValue = true;
+anyValue = { name: "Alice" };
+anyValue = [1, 2, 3];
+// You can use it without any checks
+console.log(anyValue.toUpperCase()); // This is unsafe if anyValue is not a string
+console.log(anyValue.toFixed(2)); // This is unsafe if anyValue is not a number
+```
+
+## Summary
+We will look at type checking in more detail later. But some general guidelines:
+
+- For most application code, prefer to allow TypeScript to infer types.
+- Use `unknown` when you need to handle values of different types but want to ensure type safety.
+- Use `any` sparingly, or not at all. As it bypasses type checking and can lead to runtime errors.

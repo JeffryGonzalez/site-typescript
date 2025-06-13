@@ -1,0 +1,98 @@
+---
+title: Arrays
+---
+
+Any of the basic types (or user defined types) can be used to create an array. 
+
+An array in JavaScript is a list of values, which can be of the same type or different types.
+*Usually* we want our arrays to be of the same type, so we can use TypeScript to enforce this.
+
+For example, in JavaScript, you can create an array like this:
+
+```javascript
+const numbers = [1, 2, 3, 4, 'Cat', true, ['bird', 33]];
+```
+This can lead to some interesting data structures, but you will get no type checking, so you can end up with unexpected values in your array.
+In TypeScript, you can create an array of a specific type using the following syntax:
+
+```typescript
+const numbers: number[] = [1, 2, 3, 4];
+const strings: string[] = ['Cat', 'Dog', 'Bird'];
+const mixed: (number | string)[] = [1, 'Cat', 2, 'Dog'];
+```
+You can also use the `Array` generic type to create an array of a specific type:
+
+```typescript
+const numbers: Array<number> = [1, 2, 3, 4];
+const strings: Array<string> = ['Cat', 'Dog', 'Bird'];
+const mixed: Array<number | string> = [1, 'Cat', 2, 'Dog'];
+```
+
+When you do mixed-type arrays, you have to check the type of each element before using it, as TypeScript will not be able to infer the type of each element in the array.
+You can access elements in an array using their index, which starts at 0:
+
+```typescript
+const numbers: number[] = [1, 2, 3, 4];
+console.log(numbers[0]); // 1
+console.log(numbers[1]); // 2
+console.log(numbers[2]); // 3
+console.log(numbers[3]); // 4
+console.log(numbers[4]); // undefined (out of bounds) but no error
+```
+
+You can also add or change elements in an array using the index:
+
+```typescript
+const numbers: number[] = [1, 2, 3, 4];
+numbers[0] = 10; // Change the first element
+numbers[4] = 5; // Add a new element at index 4
+numbers[852] = 42;
+console.log(numbers); // [10, 2, 3, 4, 5, empty × 847, 42]
+```
+You can also create a multi-dimensional array, which is an array of arrays:
+
+```typescript
+const matrix: number[][] = [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+];
+```
+
+## Type Inference for Arrays 
+
+TypeScript can infer the type of an array based on its elements. If you initialize an array with values, TypeScript will automatically determine the type of the array.
+```typescript
+const numbers = [1, 2, 3, 4]; // TypeScript infers number[]
+const strings = ['Cat', 'Dog', 'Bird']; // TypeScript infers string[]
+const mixed = [1, 'Cat', 2, 'Dog']; // TypeScript infers (number | string)[]
+```
+
+## Tuple Types
+A tuple is a special type of array that has a fixed number of elements, each with a specific type. You can define a tuple using the following syntax:
+
+```typescript
+const person: [string, number] = ['Alice', 30]; // A tuple with a string and a number
+```
+You can access the elements of a tuple using their index, just like with regular arrays:
+
+```typescript
+console.log(person[0]); // 'Alice'
+console.log(person[1]); // 30
+```
+
+And TypeScript will enforce that the first element is a string and the second element is a number. If you try to assign a value of the wrong type, TypeScript will give you an error:
+
+```typescript
+const person: [string, number] = ['Alice', 30];
+person[0] = 42; // Error: Type 'number' is not assignable to type 'string'
+person[1] = 'Bob'; // Error: Type 'string' is not assignable to type 'number'
+```
+
+And it will "know" the type of the elements in the tuple, so you can use them without type checking:
+
+```typescript
+const person: [string, number] = ['Alice', 30];
+console.log(person[0].toUpperCase()); // 'ALICE'
+console.log(person[1].toFixed(2)); // '30.00'
+```

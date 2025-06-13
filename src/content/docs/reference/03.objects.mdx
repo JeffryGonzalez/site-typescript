@@ -1,0 +1,31 @@
+---
+title: Object Literals
+---
+
+In TypeScript (and JavaScript} and Object can be a value.
+
+```typescript
+const person = {
+    name: "Alice",
+    age: 30,
+    isEmployed: true
+};
+```
+You can access the properties of an object using dot notation or bracket notation:
+
+```typescript
+console.log(person.name); // "Alice"
+console.log(person['age']); // 30
+```
+The *type* of the object is inferred here as `{ name: string; age: number; isEmployed: boolean; }`. This means you cannot assign values of the wrong type to the properties:
+
+```typescript
+person.name = 42; // Error: Type 'number' is not assignable to type 'string'
+person.age = "thirty"; // Error: Type 'string' is not assignable to type 'number'
+person.isEmployed = "yes"; // Error: Type 'string' is not assignable to type 'boolean'
+```
+You also cannot add new properties that are not defined in the object type:
+
+```typescript
+person.address = "123 Main St"; // Error: Property 'address' does not exist on type '{ name: string; age: number; isEmployed: boolean; }'
+```

@@ -1,0 +1,97 @@
+---
+title: Functions
+---
+
+There are two main ways to define functions in TypeScript: function declarations and arrow functions. Both can be used interchangeably, but arrow functions have some differences in how they handle the `this` keyword.
+
+
+## Function Declarations
+A function declaration is a named function that can be called later in the code. It can take parameters and return a value.
+
+```typescript
+function add(a: number, b: number): number {
+    return a + b;
+}
+console.log(add(2, 3)); // 5
+```
+
+Using the `function` keyword, will "hoist" the function declaration to the top of the scope, meaning you can call it before it is defined in the code.
+
+```typescript
+console.log(subtract(5, 2)); // 3
+function subtract(a: number, b: number): number {
+    return a - b;
+}
+```
+
+The return type of the function can be inferred and is often left off in application code:
+
+```typescript
+function multiply(a: number, b: number) {
+    return a * b; // TypeScript infers the return type as number
+}
+let answer:number;
+answer = multiply(4, 5); // answer is inferred as number
+```
+
+## Arrow Functions
+Arrow functions are a more concise way to write functions. They are often used for short, one-liner functions or when you want to preserve the `this` context from the surrounding scope.
+
+```typescript
+const divide = (a: number, b: number): number => {
+    return a / b;
+};
+console.log(divide(10, 2)); // 5
+```
+Arrow functions can also be written in a more concise form if they have a single expression:
+
+```typescript
+const square = (x: number): number => x * x;
+console.log(square(4)); // 16
+```
+Arrow functions are not "hoisted" like function declarations, so you must define them before you use them:
+
+```typescript
+console.log(modulus(10, 3)); // Error: Cannot access 'modulus' before initialization
+const modulus = (a: number, b: number): number => {
+    return a % b;
+};
+```
+
+## Function Scope 
+
+Functions are visible in the scope in which they are defined. If you define a function inside another function, it is only visible within that inner function.
+
+```typescript
+function outerFunction() {
+    function innerFunction() {
+        console.log("Hello from inner function");
+    }
+    innerFunction(); // This works
+}
+outerFunction();
+// innerFunction(); // Error: innerFunction is not defined outside outerFunction
+```
+
+A function (either a function declaration or an arrow function) declared at the "root" of a source code file (called a "module") is available 
+throughout the module.
+
+We will see below how to export functions, types, and values from a module and import them into another module.
+
+
+## Function Types 
+
+You can define the type of a function using a function type annotation. This is useful when you want to pass functions as arguments or return them from other functions.
+
+```typescript
+type MathOperation = (a: number, b: number) => number;
+function performOperation(op: MathOperation, a: number, b: number): number {
+    return op(a, b);
+}
+const add: MathOperation = (a, b) => a + b;
+const subtract: MathOperation = (a, b) => a - b;
+const result = performOperation(add, 5, 3);
+const result2 = performOperation(subtract, 5, 3);
+const result3 = performOperation((a, b) => a * b, 5, 3);
+console.log({result, result2, result3})); // { result: 8, result2: 2, result3: 15 }
+```
