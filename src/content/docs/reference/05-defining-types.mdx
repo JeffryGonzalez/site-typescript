@@ -1,4 +1,174 @@
 ---
 title: Defining Types
 ---
+import { Aside } from '@astrojs/starlight/components';
 
+A "type" is a *category* of an acceptable domain of values. We know, for example, that when we declare a variable of type `string`, it can only hold values that are strings, such as `"hello"` or `"world"`.
+
+That is a pretty *broad* type, because it can hold *any* string value. But we can also define *narrower* types that only allow certain values or structures.
+
+<Aside type="note">
+Starting to "think in types" is a key part of becoming a TypeScript developer. It can be hard to get started, but it is worth the effort.
+</Aside>
+
+For example, if we wanted a string-like type that only allows the values `"red"`, `"green"`, or `"blue"`, we could define a type like this:
+
+```typescript
+type Color = "red" | "green" | "blue";
+
+let myColor: Color;
+myColor = "red"; // OK
+myColor = "yellow"; // Error: Type '"yellow"' is not assignable to type 'Color'
+
+```
+This is us saying that anything of type `Color` is a *subset* of some literal strings that define the permissable values. The `type` keyword is used to define a new type (called an *alias*), and the `|` operator is used to create a union type that allows any of the specified values.
+
+So we are saying that values of type `Color` can only be one of the three specified strings. If we try to assign a value that is not one of those, TypeScript will give us an error.
+
+A nice side-effect of this is that not only is the TypeScript compiler able to check that we are using the correct values, but it can also provide *autocomplete* suggestions in our editor. So if we start typing `myColor = "`, the editor will suggest `"red"`, `"green"`, and `"blue"` as possible completions.
+
+<Aside type="note">
+There is a cool trick you can do with this if *all* you want is the autocomplete suggestions, but also want to allow any string value.
+
+```typescript
+type ColorChoices = 'red' | 'green' | 'blue' | (string & {});
+
+const color1: ColorChoices = 'red';
+let color2: ColorChoices;
+color2 = 'avocado';
+```
+</Aside>
+
+## Defining Object Types
+In TypeScript, you can define the structure of an object using an *interface* or a *type alias*. This allows you to specify what properties an object should have and their types.
+```typescript
+interface Person {
+    name: string;
+    age: number;
+    isEmployed: boolean;
+}
+type Car = {
+    make: string;
+    model: string;
+    year: number;
+};
+const person: Person = {
+    name: "Alice",
+    age: 30,
+    isEmployed: true
+};
+const car: Car = {
+    make: "Toyota",
+    model: "Camry",
+    year: 2020
+};
+```
+
+You can also use an `interface` to define a type:
+```typescript
+interface Point {
+    x: number;
+    y: number;
+}
+const point: Point = {
+    x: 10,
+    y: 20
+};
+```
+
+<Aside type="note">
+You can use either `interface` or `type` to define object types. There really isn't a lot of difference between the two. 
+
+When you use an `interface`, there is a *slight* performance advantage **for the compiler**, but no difference at runtime (as types are erased during compilation).
+
+I *personally* prefer using `types` for two reasons:
+1. The notion of `interface` exists in other languages, and while there is some overlap, they are much different in TypeScript.
+2. Interfaces have a strange behavior where you can define them multiple times in a module, and they will extend one another. I just think that is weird.
+
+Bottom line, you do you.
+</Aside>
+
+## Extending Types 
+
+```typescript
+type Person = {
+    name: string;
+    age: number;
+};
+type Employee = Person & {
+    employeeId: number;
+    department: string;
+    salary:number;
+};
+const employee: Employee = {
+    name: "Alice",
+    age: 30,
+    employeeId: 12345,
+    department: "Engineering",
+    salary: 75000
+};
+```
+
+### Discriminated Unions
+A discriminated union is a powerful way to define a type that can be one of several different types, each with its own properties. You can use a common property (called a "discriminator") to determine which type it is.
+
+```typescript
+type Person = {
+    name: string;
+    age: number;
+};
+type Employee = Person & {
+    kind: "employee";
+    employeeId: number;
+    department: string;
+    salary:number;
+};
+type Customer = Person & {
+    kind: "customer";
+    customerId: number;
+    purchaseHistory: string[];
+};
+type User = Employee | Customer;
+const user1: Employee = {
+    name: "Alice",
+    age: 30,
+    employeeId: 12345,
+    department: "Engineering",
+    salary: 75000
+};
+const user2: Customer = {
+    name: "Bob",
+    age: 25,
+    customerId: 67890,
+    purchaseHistory: ["item1", "item2"]
+};
+function handleUser(user: User) {
+    if (user.kind === "employee") {
+        console.log(`Employee: ${user.name}, Department: ${user.department}`);
+    } else {
+        console.log(`Customer: ${user.name}, Purchases: ${user.purchaseHistory.join(", ")}`);
+    }
+}
+handleUser(user1); // Employee: Alice, Department: Engineering
+handleUser(user2); // Customer: Bob, Purchases: item1, item2
+```
+
+## Anonymous Types
+You can also define types on the fly without giving them a name. This is useful for one-off types that you don't need to reuse elsewhere.
+
+```typescript
+const person: { name: string; age: number; isEmployed: boolean, email: string } = {
+    name: "Alice",
+    age: 30,
+    isEmployed: true
+    email: 'Alice@aol.com'
+};
+
+function sendMessage(to: { name: string; email: string }, message: string) {
+    console.log(`Sending message to ${to.name} at ${to.email}: ${message}`);
+}
+sendMessage({ name: "Bob", email: "bob@example.com" }, "Hello Bob!");
+sendMessage(person, "Hello Alice!");
+```
+
+This is an example of *structural typing*, where TypeScript checks that the object has the required properties and types, even if it is not explicitly defined as a type or interface.
