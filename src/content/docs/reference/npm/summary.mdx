@@ -2,42 +2,45 @@
 title: Summary (TLDR)
 ---
 
-### Never commit `node_modules` to Source Control
+import { Badge } from '@astrojs/starlight/components';
+
+
+### <Badge text="NO" variant="danger" /> Never commit `node_modules` to Source Control
 
 It isn't your code to track changes on, and different packages get installed on different operating systems or even different versions of the same OS. Just don't do it.
 
-### Always commit `package.json` and `package-lock.json` to Source Control
+### <Badge text="YES" variant="success" /> Always commit `package.json` and `package-lock.json` to Source Control
 
 These *must* be tracked.
 
 
-### Only use NPM Install For Individual Packages 
+### <Badge text="YES" variant="success" />Only use NPM Install For Individual Packages 
 
 After an application is created, *never* run `npm install` without specifying a package name. 
 
-### Use `npm ci` for Updating Dependencies On Your Machine 
+### <Badge text="YES" variant="success" /> Use `npm ci` for Updating Dependencies On Your Machine 
 
 If a new `package.json` or `package-lock.json` is fetched from source control, run `npm ci` to install the exact versions specified in `package-lock.json`.
 This will not modify the `package-lock.json` file and use the versions specified in it *only*.
 
-### Periodically Run NPM CI Anyhow 
+### <Badge text="MAYBE" variant="caution" /> Periodically Run NPM CI Anyhow 
 
 Just good housekeeping. You might have missed a change to the dependencies.
 
-### Use `npm outdated` to See What Needs Updating
+### <Badge text="YES" variant="success" /> Use `npm outdated` to See What Needs Updating
 Run `npm outdated` to see what packages are out of date. This will show you the current version, the wanted version (the latest version that satisfies the version range specified in `package.json`), and the latest version (the latest version available on the NPM registry).
 
-### Use `npm update` to Update Packages Within the Version Range Specified in `package.json`
+### <Badge text="YES" variant="success" />              sUse `npm update` to Update Packages Within the Version Range Specified in `package.json`
 Run `npm update` to update packages to the latest version that satisfies the version range specified in `package.json`. This will modify the `package-lock.json` file to reflect the new versions.
 
-### Use `npm install -D <pacakagename>` To Install a Development Dependency 
+### <Badge text="MAYBE" variant="caution" /> Use `npm install -D <pacakagename>` To Install a Development Dependency 
 
 Run `npm install -D <packagename>` to install a package as a development dependency. This will add the package to the `devDependencies` section of `package.json` and update `package-lock.json`. It doesn't mean *much* for Angular applications, but it is a good practice to separate development dependencies from production dependencies.
 
-### Use `npm install <packagename> --legacy-peer-deps` To Install a Package That Has Peer Dependency Conflicts
+### <Badge text="MAYBE" variant="caution" /> Use `npm install <packagename> --legacy-peer-deps` To Install a Package That Has Peer Dependency Conflicts
 
 But this means you have to *test*. Angular is *pretty* stable these days. Most packages that are compatible with Angular 19 will be compatible with Angular 20. But you have to *test*.
 
-### Consider Using *overrides* in `package.json` to Force Specific Versions of Packages
+### <Badge text="MAYBE" variant="caution" /> Consider Using *overrides* in `package.json` to Force Specific Versions of Packages
 
 This is a more advanced topic, but sometimes a package you are installing has a dependency on a package that is out of date or has a security vulnerability. You can use the `overrides` field in `package.json` to force a specific version of a package to be used, regardless of what other packages specify. Use this with caution, but it can help in a pinch. [Overrides at NPM](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides)
