@@ -1,0 +1,39 @@
+---
+title: NPM Opinions
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution">
+**Heavy Opinions Ahead!**
+</Aside>
+
+Bad dependency management will harsh to mellow of even the greatest development teams. It is a common source of bugs, security vulnerabilities, and performance issues. It can also make it difficult to upgrade or change dependencies in the future.
+
+We went a little crazy when we started using NPM, to be honest. I mean just about *anything* you might need is out there as a package you can just install and use. As application developers, this can be a god-send. I always say "I don't get paid to write code, I get paid to deliver applications". The less I have to write, the better.
+
+I've seen Angular applications with close to 100 dependencies in their root `package.json` file. This is just crazy. It is a maintenance nightmare, and it is a security risk (in this one example, they had *three* different JavasScript libraries installed for just dealing with dates and times).
+
+## The Tough Love Approach 
+
+This might be too heavy handed and authoritarian for some teams, but it should give you a sense of how important this is.
+
+I work on several "hippy-dippy" development teams that do *real* Continuous Integration. That means each of the developers on the team can push to the main branch of the repository *any time they want*.  
+
+**However**, *nobody* is allowed to change `package.json` or `package-lock.json` without *explicit approval* from the entire team.
+
+This is the *only* thing we require pull request for. 
+
+In the PR description, the developer must explain:
+- Why the dependency is needed
+- What alternatives were considered
+- Why the chosen dependency is the best option
+- How the dependency will be kept up to date
+- Any potential security risks associated with the dependency
+- How we will know when we no longer need the dependency 
+
+<Aside type="note">
+Of *course* sometimes it is just because you are updating existing dependencies. In this case, the PR description should explain why the update is needed, and what changes were made in the update.
+</Aside>
+
+Again, this might be too much for you and your team, but the impact is for us all to be thoughtful about the dependencies we are adding to our applications. Dependencies are *always* coupling to other people's code. This is a risk, and we need to manage that risk.

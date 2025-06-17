@@ -1,0 +1,235 @@
+---
+title: Overview
+---
+import { Aside } from '@astrojs/starlight/components';
+
+import packageJson from '../../../../../code/node/package.json?raw';
+
+import { Code } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+## NodeJS and NPM 
+
+When most people think of NodeJS, they think of server-side JavaScript. Building websites and APIs that are backed by JavaScript applications. NodeJS is the JavaScript engine from Google's Chrome[^1] browser, called V8, packaged up with a set of libraries that make it possible to build server-side applications. 
+
+Unlike the restrictions of JavaScript placed on it by the web browser environment, NodeJS gives you access to the file system, network resources, and other low-level operating system capabilities.
+
+<Aside type="note">
+There are alternative package managers for NodeJS apps like [Yarn](https://yarnpkg.com/) and [pnpm](https://pnpm.io/), but NPM is the most widely used and is the default package manager that comes with NodeJS. I will just cover NPM here.
+</Aside>
+
+### What Does This Have to Do With TypeScript and Angular?
+
+When you are building an Angular application, you are writing TypeScript code that is ultimately compiled to JavaScript. This JavaScript code is then executed in a web browser. However, the tools that you use to build, test, and deploy your Angular application are often built using NodeJS.
+
+For example, the Angular CLI (Command Line Interface) is a tool that you use to create, build, and test Angular applications. The Angular CLI is built using NodeJS and is distributed as an NPM package. When you run commands like `ng new` or `ng serve`, you are executing JavaScript code that is running in the NodeJS environment.
+
+NPM (Node Package Manager) is the package manager for NodeJS. It is used to install and manage packages (libraries) that you can use in your NodeJS applications. When you create an Angular application, you use NPM to install the Angular framework and other dependencies that your application needs.  
+
+For the most part[^2], NodeJs and NPM just provide the *developer tooling* for building, testing, and delivering our Angular applications. The applications are delivered as static HTML, JavaScript, CSS, and any other static assets you might need.
+
+Angular applications built this way do not rely on NodeJS at runtime.
+
+### Packages 
+
+Node applications use the notion of *packages* to represent two things:
+
+- Reusable libraries that you can install and use as part of your application. These are published to registries (like [npmjs.com](https://www.npmjs.com/), or internal registries like [Artifactory](https://jfrog.com/artifactory/)) and can be installed using NPM. They can be installed into another package, or globally on the user's machine.
+- The basis of an application that uses other packages. We don't typically deploy our Angular applications as NPM packages, but we do use the package format to represent our application during development.
+
+A package is defined by a `package.json` file that contains metadata about the package, including its name, version, dependencies, scripts, and other information.
+
+There is also a `package-lock.json` file that is generated automatically when you install packages using NPM. This file contains a detailed description of the exact versions of each package that was installed, along with their dependencies. This file is important for ensuring that your application builds consistently across different environments.
+
+When you install a package using NPM, it searches up the directory structure for a `package.json` file to determine the context in which to install the package. This means that if you are in a subdirectory of your project and you run `npm install <package-name>`, NPM will look for the nearest `package.json` file in the current directory or any parent directory.
+
+These packages are downloaded into the `node_modules` directory in your project. This directory can become quite large, as it contains not only the packages you explicitly install, but also all of their dependencies. 
+
+<Aside type="caution">
+Do *not* track the `node_modules` directory in source control. It is common practice to add `node_modules` to your `.gitignore` file (or equivalent for your version control system) to prevent it from being committed to your repository. The `package.json` and `package-lock.json` files are sufficient to recreate the `node_modules` directory by running `npm install`.
+</Aside>
+
+#### The `package.json` File 
+
+The [`package.json`](https://docs.npmjs.com/cli/v11/configuring-npm/package-json) file is the "root" of a NodeJS package and our Angular applications. It contains metadata about the package, including its name, version, description, main entry point, scripts, dependencies, and other information.
+
+For a newly created Angular application created with the Angular CLI, You would get something like this (depending on the options you supplied and when you run it):
+
+<Code code={packageJson} lang="json" filename="package.json" />
+
+The `dependencies' section lists the packages that are required for the application to run. These packages will be installed when you run `npm install`. (Note, the Angular CLI automatically runs `npm install` for you when you create a new application.)
+
+These packages are sources from your configured NPM registry, which is usually the public [npmjs.com](https://www.npmjs.com/) registry, but can be a private registry for your organization.
+
+You'll notice some packages start with an `@` symbol. These are called *scoped* packages and are a way to group related packages together. For example, all Angular packages are scoped under the `@angular` scope.
+
+The `devDependencies` section lists packages that are only needed during development, such as testing frameworks, build tools, and linters. These packages are not required for the application to run in production.
+
+The difference between `dependencies` and `devDependencies` is important for optimizing the size of your application when it is deployed to production. When you run `npm install --production`, only the packages listed in `dependencies` are installed, which helps reduce the size of the `node_modules` directory. However, this has almost no bearing on how Angular applications are built and deployed. For us Angular developers, the distinction between `dependencies` and `devDependencies` is mostly about *intent*. It helps us understand which packages are essential for the application to run and which are only needed during development.
+
+<Aside type="note">
+In your `import` statement in your TypeScript code, there is no difference between a package listed in `dependencies` and one listed in `devDependencies`. You can import and use both types of packages in your application code. The distinction is only relevant during the installation process with NPM.
+
+`import`s that reference packages in the `node_modules` directory are resolved by the module resolution algorithm used by TypeScript and NodeJS. This algorithm looks for the package in the `node_modules` directory of the current project and its parent directories until it finds the package or reaches the root of the filesystem. They do not start with `./` or `../` because they are not relative imports. They are absolute imports that reference packages installed in the `node_modules` directory.
+</Aside>
+
+#### Semantic Versioning and Versioning Rules 
+
+NodeJS packages use [Semantic Versioning](https://semver.org/) (SemVer) to manage version numbers. A version number is in the format `MAJOR.MINOR.PATCH`, where:
+- `MAJOR` version is incremented when there are incompatible API changes
+- `MINOR` version is incremented when functionality is added in a backwards-compatible manner
+- `PATCH` version is incremented when backwards-compatible bug fixes are made
+
+So, you can see our dependency on `@angular/common` is version `^20.0.0`. 
+
+What the heck does that `^` mean? It is a versioning rule that tells NPM what versions of the package are acceptable when installing or updating packages.
+
+Here are some common versioning rules (examples below):
+- Dependencies with a carrot ('^') means "When I install this, install whatever version is the latest version, but don't change the MAJOR version." (e.g. "Take New Features, but don't break me.")
+- Dependencies with a tilde ('~') means "When I install this, install whatever version is the latest version, but don't change the MINOR version." (e.g. "Take Bug Fixes, but I don't want new features, but don't break me.")
+- Dependencies with no prefix means "Only install this exact version." (e.g. "Don't change anything, ever.")
+
+You can also use other prefixes like `>`, `<`, `>=`, `<=`, and `*` to specify different versioning rules. See [semver.npmjs.com](https://semver.npmjs.com/) for more information.
+
+So, let's say you want to install a package, you can do this:
+
+```bash
+npm install @ngrx/signals
+```
+
+This will result in the NPM tool "querying" the registry to see what version of the `@ngrx/signals` package is the latest version, and install that.
+
+Your `package.json` file will be updated to reflect the installed version, and it will use a carrot (`^`) prefix by default. So, if the latest version of `@ngrx/signals` is `16.1.2`, your `package.json` file will be updated to look like this:
+
+```json
+"@ngrx/signals": "^19.1.0"
+```
+
+This is the *default*, because it is a good idea to *always* take the latest version of a package that is compatible with the current MAJOR version. This way, you get new features and bug fixes without breaking your application.
+
+If you wanted, you could annotate it so that in the future, you only want to take patch updates, you could do this:
+
+```bash 
+npm install @ngrx/signals@~19.1.0
+```
+
+Or you could directly edit your `package.json` file to look like this:
+
+```json
+"@ngrx/signals": "~19.1.0"
+```
+
+You can use these versioning rules when you install whatever the "latest" version of Angular Core 16 is, and will take any minor or patch updates, you can do this:
+
+```bash
+npm install @angular/core@~16.0.0
+```
+
+<Aside type="note">
+When you *don't* specify a version when installing a package, NPM will install the latest version of the package that is compatible with the versioning rules specified in your `package.json` file. If there are no versioning rules specified, NPM will install the absolute latest version of the package available in the registry. What is the "latest" version? Whatever the owner of that package has tagged as the latest version. That is a manual process. It is prone to error. I try to be explicit when installing dependencies if it is unclear.
+</Aside>
+
+
+#### The `package-lock.json` File 
+
+Or - How everything I said above is sort of a white lie.
+
+If things worked like I showed above, it would cause mayhem when working with a team of developers. This is because those versioning rules are applied *at the time you run `npm install`*. Imagine this:
+
+<Steps>
+1. On Monday, Alice creates a new Angular application using the Angular CLI. The latest version of Angular is `20.0.1`
+2. On Wednesday, Bob clones Alice's repository and runs `npm install`. The latest version of Angular is still `20.0.1`, so Bob gets the same version as Alice.
+3. On Friday, Charlie clones Alice's repository and runs `npm install`. The latest version of Angular is now `20.1.0`, so Charlie gets a different version than Alice and Bob.
+4. Charlie commits some code that uses some new stuff in Angular 20.1.0, but when Alice and fetch those changes, they break, because he is using a newer version of Angular than they are.
+
+</Steps>
+
+This is what the `package-lock.json` file is for. The `package-lock.json` file is automatically generated when you run `npm install`. It contains a detailed description of the exact versions of each package that was installed, along with their dependencies.
+
+<Aside type="caution">
+PAY ATTENTION TO THIS
+
+When you run `npm install`, npm will install all of the dependencies listed in your `package.json` file, *and* it will update the `package-lock.json` file to reflect the exact versions of each package that was installed. This means that if you run `npm install` on different days, you might get different versions of packages installed, depending on what the latest versions are at the time you run the command.
+</Aside>
+
+Developers working in a team should almost *never* run `npm install` within that repository. Instead, they should run `npm ci` (which stands for "clean install"). This command will install the exact versions of each package listed in the `package-lock.json` file, ensuring that everyone is working with the same versions of each package.
+
+This is key to mitigating the "works on my machine" problem that can occur when different developers are working with different versions of packages. *Dependency Hell* is a real thing. Be deliberate about your package versions.
+
+I don't want to harp on this too much, but it is important. There are too many things that can go wrong.
+
+In the morning, you pull down the changes from the repo, and if there are changes to `package.json` or `package-lock.json`, do you even *notice* that? You might have an older version of a package installed. 
+
+If you you (mistakenly) run `npm install`, you might get a newer version of a package that is incompatible with the rest of the team. This can lead to all sorts of weirdness, like your application not building, or tests failing, or runtime errors.
+
+<Aside type="tip">
+### RUN `npm ci` OFTEN
+
+When working on a project with a team of developers, I make it a habit to run `npm ci` frequently. This ensures that I am always working with the exact versions of each package that the rest of the team is using. It also helps to catch any issues early, before they become bigger problems.
+
+Only use `npm install` to add a new package. Use `npm update` to update a package according to the versioning rules specified in your `package.json` file. Otherwise, use `npm ci` to ensure that you are working with the exact versions of each package listed in the `package-lock.json` file.
+</Aside>
+
+<Aside type="tip">
+When I'm working on a project with a team of developers, my routine is this:
+- Each morning fetch the latest from the repo.
+- If there are changes to `package.json` or `package-lock.json`, I run `npm ci` to ensure I have the exact versions of each package that the rest of the team is using.
+
+The `npm ci` is *heavy duty*. It means "do a clean install". It nukes your current `node_modules` directory and installs everything fresh, exactly as specified in the `package-lock.json` file. It is slower than just running `npm install`, but it is worth it to ensure that you are working with the same versions of each package as the rest of the team.
+
+This might be overly paranoid on my part, NPM has gotten *a lot* better over the years, but I've seen enough weirdness with package installations to justify this extra step.
+
+And it gives me time to browse Blue Sky or YouTube while I install. Bonus.
+</Aside>
+
+## Peer Dependencies
+
+NPM packages can also specify their own dependencies. These are listed in the `dependencies` section of their own `package.json` file. When you install a package, NPM will also install its dependencies, and their dependencies, and so on.
+
+Sometimes a package will specify a dependency as a *peer dependency*. A peer dependency is a way for a package to specify that it is compatible with a specific version of another package, but it does not install that package itself. Instead, it expects the consuming application to provide that package.
+
+For example, many Angular libraries specify `@angular/core` as a peer dependency. This means that the library is compatible with a specific version of Angular, but it does not install Angular itself. Instead, it expects the consuming application to provide Angular.
+
+When you install a package that has peer dependencies, NPM will check to see if the required peer dependencies are already installed in your project. If they are not, NPM will issue a warning, but it will not install the peer dependencies for you. It is up to you to ensure that the required peer dependencies are installed in your project.
+
+But what if the package isn't updated to the latest version of Angular (for example)?.
+
+Let's say you have created a new Anguaar 20.0.0 application. You go to install a package you like, for example `@ngrx/signals', but it hasn't been tested against Angular 20 yet. It might have listed in it's `package.json` file something like this:
+
+```json title="package.json of @ngrx/signals"
+"peerDependencies": {
+    "@angular/core": "^19.0.0",
+  }
+```
+
+
+
+When you run `npm install @ngrx/signals`, NPM will check to see if the required peer dependencies are installed in your project. In this case, it will see that you have Angular 20.0.0 installed, which is not compatible with the `^19.0.0` versioning rule specified in the peer dependencies. You'll get an error. 
+
+You can install it anyway, with two different options (note: I prefer `--legacy-peer-deps`):
+
+```bash
+npm install @ngrx/signals --force
+```
+or
+```bash
+npm install @ngrx/signals --legacy-peer-deps
+``` 
+
+Here is a good link for an overview on the differences [Why Legacy Peer Deps is Better](https://dev.to/just_ritik/why-legacy-peer-deps-is-better-than-force-in-npm-p44)
+
+What does this mean? It means that the `@ngrx/signals` package has not been tested with Angular 20. It might work, but it might not. 
+
+I mean you can't *blame* them. They can't say they support any future version of Angular. They can only say they support the versions they have tested against.
+
+You have a few options:
+- Install and test it with Angular 20. If there are issues, you can report them to the package maintainer, or better, send a pull request.
+- Find another package that does the same thing and has been tested with Angular 20.
+- Wait until the package maintainer updates the package to support Angular 20.
+  - This one stinks, but is sometimes needed. You are tying your release schedule to someone else's. Sucks, but it happens.
+
+
+
+[^1]: [What is V8?](https://v8.dev/docs) - V8 is the open source JavaScript engine that powers Google Chrome and Node.js. It was originally developed by Google for use in their Chrome web browser, but it has since been adapted for use in other environments, including Node.js. It has an open source branch called "Chromium".
+
+[^2]: Angular can use NodeJS at runtime for [Server and Hybrid Rendering](https://angular.dev/guide/ssr)
