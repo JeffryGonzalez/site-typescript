@@ -1,0 +1,55 @@
+---
+title: But About JavaScript
+position: 20
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+But you do have to know *JavaScript*. At least to some extent. 
+
+## What JavaScript Is 
+
+JavaScript is a high-level programming language that can run in various contexts. It is a "scripting language", by which I mean it's general purpose is to interact with the environment it is running in.
+
+For example, when JavaScript is running in a web browser, it can interact with the Document Object Model (DOM) to manipulate web pages, or other browser APIs like `fetch` to make HTTP calls. When JavaScript is running in a server environment like Node.js, it can interact with the file system, databases, and network resources.
+
+When you are in a web browser, you can't write JavaScript that starts an HTTP server, or reads a file from the file system. The environment you are running in determines what you can do with JavaScript.
+
+## JavaScript is Dynamic
+JavaScript is a *dynamically typed* language. This means that you don't have to declare the types of variables, function parameters, or return values. The types are determined at runtime.
+For example, you can write:
+
+```javascript title="sample.js"
+let message = "Hello, World!";
+console.log(typeof message); // "string"
+message = 42; // This is allowed in JavaScript
+console.log(typeof message); // "number"
+message = function() { return "Hello"; };
+console.log(typeof message); // "function"
+```
+In this example, the variable `message` is initially assigned a string value, but later it is reassigned a number value. JavaScript allows this because it is dynamically typed.
+
+
+## JavaScript is ~~Slow~~ Kind of Fast
+
+JavaScript is often criticized for being slow, but this is not entirely accurate. JavaScript engines, like Google's V8 (used in Chrome and Node.js), have made significant advancements in performance over the years. They use techniques like Just-In-Time (JIT) compilation to optimize code execution. It will *never* be as fast as a compiled language like C or Rust, but it is fast enough for most web applications. 
+
+Most of what JavaScript does is *nothing*. It sits around and waits for some kind of *event* to happen. A user clicks a button, or a timer goes off, or an HTTP response comes back. When one of these events happens, JavaScript springs into action and does whatever it needs to do.
+This event-driven model is very efficient for web applications, where most of the time is spent waiting for user input or network responses. JavaScript's single-threaded nature can be a limitation for CPU-intensive tasks, but for I/O-bound tasks, it is quite effective.
+
+The JavaScript *event loop*[^1] is a key part of this model. It is responsible for managing the execution of code, handling events, and coordinating asynchronous operations. Understanding how the event loop works can help you write more efficient JavaScript code.
+
+## JavaScript is Kind of Familiar 
+
+JavaScript is in the family of languages that descend from the Algol programming language. Other examples include C, C++, C#, and Java. If you have experience with any of these languages, you will find many familiar concepts in JavaScript, such as variables, functions, control structures (like `if` statements and loops), and object-oriented programming principles.
+
+Javascript uses *blocks* to define scope (sections of code delimited by curly braces `{}`), and it has functions as first-class citizens, meaning you can pass them around as arguments, return them from other functions, and assign them to variables.
+
+JavaScript uses an *imperative paradigm*, meaning you write code that describes *how* to do something, step by step. This is in contrast to *declarative* programming, where you describe *what* you want to achieve without specifying the exact steps to get there.
+
+<Aside type="caution">
+The similarities between JavaScript and other C-style languages can be a double-edged sword. While it can make it easier to learn JavaScript if you are already familiar with these languages, it can also lead to confusion if you assume that JavaScript behaves exactly like these other languages. Always be aware of the unique characteristics of JavaScript, such as its dynamic typing and event-driven model. Some of the *worst* JavaScript (and, therefore TypeScript) code I've seen has been written by developers who assumed that JavaScript behaves like Java or C#.
+</Aside>
+
+
+[^1]: [MDN Web Docs - Event Loop](hhttps://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#job_queue_and_event_loop)

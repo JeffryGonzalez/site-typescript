@@ -1,0 +1,11 @@
+{
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "[mdx]": {
+    "editor.wordWrap": "on"
+  },
+   "[md]": {
+    "editor.wordWrap": "on"
+  }
+}

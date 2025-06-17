@@ -1,0 +1,114 @@
+---
+title: TypeScript is JavaScript
+position: 10
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+TypeScript isn't really a programming language[^1]. It is a type system *on top of* the JavaScript programming language.
+
+For example, the TypeScript language does not have a concept of a loop, an `if` statement, or a function. These are all concepts that are part of the JavaScript language.
+
+## So, You Should Learn JavaScript First, Right?
+
+Maybe. Maybe not. It's complicated. JavaScript (technically [ECMA-262](https://ecma-international.org/publications-and-standards/standards/ecma-262/)), is a high-level, dynamic, untyped, interpreted programming language. 
+
+It was created fairly early in the history of the web (by Brendan Eich in 1995, at Netscape) to add interactivity to web pages. It has evolved over the years to become a powerful and flexible language that is used for both client-side and server-side development.
+
+Browsers were pretty limited then - simple forms, navigation using links, etc - as there was no programmable document object model (DOM). JavaScript was created to be a simple-enough-for-non-programmers language that could be used to add some interactivity to web pages, and basic form validation. It was *small*, and didn't have a lot of first-class features that you would find in more fully-featured programming languages. For example, while *technically* it was considered an object-oriented programming language, it didn't have classes or other features that you would find in more traditional OOP languages like Java or C++, or C#.
+
+Created in the style of other programming languages of the time, like Scheme or Smalltalk, it has very few keywords. Certain idiomatic ways to implement common programming constructs (like classes) were not added until much later (ES6/ES2015), so developers using JavaScript had to be creative in how they implemented these constructs.
+
+It was rudimentary at best. For example, variables only had two *scopes*: global and function. There was no block scope or module scope. This led to a lot of confusion and bugs, as developers would often accidentally overwrite variables in the global scope.
+
+Confusing structures commonly used by JavaScript developers tried to overcome these limitation, like Immediately Invoked Function Expressions (IIFE) to create a local scope.
+
+### Old Skool IIFE Example
+
+The following example shows how you might create a simple `person` object with a private `name` property using an IIFE. (Don't worry - you don't need to learn how to do this, thankfully!)
+
+```js 
+var person = (function(name) {
+    return {
+        getName: function() {
+            return name;
+        },
+        setName: function(newName) {
+            name = newName;
+        }
+    };
+    })('Alice');
+
+console.log(person.getName()); // Alice
+person.setName('Bob');
+console.log(person.getName()); // Bob
+```
+
+### Modern JavaScript Example
+
+JavaScript *now* has much better support for common programming constructs, like classes and modules, and even properties. It also has block scope, which makes it easier to reason about variable scope. 
+
+```js
+class Person {
+    #name; // private field
+
+    constructor(name) {
+        this.#name = name;
+    }
+
+    get name() {
+        return this.#name;
+    }
+
+    set name(newName) {
+        this.#name = newName;
+    }
+}
+const person = new Person('Alice');
+console.log(person.name); // Alice
+person.name = 'Bob';
+console.log(person.name); // Bob
+```
+
+## TypeScript Was Created During JavaScript's Adolescence
+
+TypeScript came on the scene from Microsoft in 2012. It was *one* entry in a variety of attempts developers had created to make working with JavaScript a better developer experience.
+
+Other examples include:
+- [CoffeeScript](https://coffeescript.org/) - A language that compiles to JavaScript, with a syntax inspired by Ruby and Python. It was created in 2009.
+- [Dart](https://dart.dev/) - A programming language created by Google in 2011. It was designed to be a more structured and scalable alternative to JavaScript, with features like classes, interfaces, and optional static typing.
+- [Elm](https://elm-lang.org/) - A functional programming language that compiles to JavaScript. It was created in 2012, and is designed to be a more reliable and maintainable alternative to JavaScript, with features like immutability and strong static typing.
+- [ClojureScript](https://clojurescript.org/) - A variant of the Clojure programming language that compiles to JavaScript. It was created in 2011, and is designed to be a more expressive and powerful alternative to JavaScript, with features like macros and immutable data structures.
+
+One thing that was different about TypeScript from these other examples was that it wasn't a completely alternative language to JavaScript. Each of those languages had their own distinctive syntax, but all of them compiled[^2] to JavaScript. They included a new thing for a lot of web developers - a compilation step. 
+
+A part of TypeScript's appeal was that it didn't require you to rewrite all[^3] of your existing JavaScript code. You could *gradually* add TypeScript to your existing JavaScript codebase, and it would just work. This made it a lot easier for developers to adopt TypeScript, as they didn't have to learn a completely new language.
+
+The other issue, at the time, was this weird "catch 22" thing going on in the world of web development. *Finally* the web as a platform was becoming viable. HTML 5 was becoming a standard, and browsers were starting to implement it. CSS was becoming more powerful, and JavaScript was becoming more capable. And *people were updating their browsers*. Browser's were becoming "evergreen", meaning that they would automatically update to the latest version. This was a big deal, as it meant that developers could finally start using the latest features of JavaScript without having to worry about whether or not their users were using an old version of Internet Explorer. Unless of course people weren't updating their browsers (I'm looking at you, corporate IT). 
+
+Even the JavaScript language specification (overseen by an organization with the clever name of [TC39](https://tc39.es/)) were getting excited and adding new features to the language at a rapid pace.
+
+But the problem was that as a developer, you might be tempted to use the "latest, greatest" features of JavaScript, but you couldn't be sure that your users would be able to run your code. If you used a feature that wasn't supported by their browser, your code would break. This was a big problem for developers, as they had to be very careful about which features they used in their code. You basically had to write your code at the "lowest common denominator" level of JavaScript that was supported by all browsers.
+
+Developers being developers, there were a few different tools to help solve this problem. By far, the most common was *yet another transpiler* called [Babel](https://babeljs.io/). With Babel (and related tools), you could write your JavaScript code using the latest features, and then transpile it down to a version of JavaScript that was supported by all browsers. This was a big deal, as it meant that developers could finally start using the latest features of JavaScript without having to worry about whether or not their users were using an old version of Internet Explorer.
+
+TypeScript decided to support that same kind of functionality in their compiler. 
+
+Overall, the TypeScript team did a pretty good job at this. It certainly helps Microsoft being the 800 pound gorilla, and influential on the future of JavaScript, so *many* of the features that were added to TypeScript were eventually added to JavaScript.
+
+But not all of them. Some features of TypeScript are still not supported by JavaScript, and may never be. For example, TypeScript's type system is much more powerful than JavaScript's type system (which is to say, non-existent). TypeScript has features like interfaces, generics, and type aliases that are not supported by JavaScript. JavaScript only got private class fields recently (2020), where TypeScript had them for years. Except they don't "match". (TypeScript uses the `private` keyword here, while JavaScript uses a `#` prefix.)
+
+
+<Aside type="tip">
+**We Will Prefer JavaScript Features Over TypeScript Features Whenever Possible**
+
+I personally use the versions of features that *are* part of JavaScript whenever possible over TypeScript "made up" versions. This *is not* something I feel *super passionate* about, but I do think it is a good idea because many JavaScript runtimes now profess they can "run TypeScript" (Like Node, Bun, Deno). What these runtimes do is *strip* the type annotations off your JavaScript code. If, after doing that, there are variances the runtime can't understand, you're going to have a bad time. See[^4] for some examples.
+</Aside>
+
+[^1]: Note: Technically, the TypeScript type system *is* a programming language. It is Turing complete, which means that you can write any program in it that you can write in any other programming language. However, this is not the way that TypeScript is typically used. For example, see [Doom Implemented in TypeScript Types](https://news.ycombinator.com/item?id=43184291)
+
+[^2]: Compilation is the process of transforming source code written in one programming language into another programming language. In the case of TypeScript, the source code is transformed into JavaScript, which can then be executed by a JavaScript engine (like the one in your web browser). Since in our minds (as developers) we usually think of "compilation" as going from a high-level language to a low-level language (like assembly or machine code), this can be a bit confusing. But in the case of TypeScript, the compilation step is really just a transformation step, where the TypeScript code is transformed into JavaScript code that can be executed by a JavaScript engine. Many developers use the term "transpilation" to describe this process, since it is a transformation from one high-level language (TypeScript) to another high-level language (JavaScript). 
+
+[^3]: Most JavaScript source code could just be run through the TypeScript compiler (tsc) and it would just work. However, there are some cases where the JavaScript code uses features that are not supported by TypeScript, or where the code is written in a way that is not compatible with TypeScript's type system. In these cases, you may need to make some changes to the JavaScript code in order to get it to work with TypeScript.
+
+[^4]: I prefer to use union literal types over TypeScript's `enum` type. JavaScript does not have the notion of "automatically" scoping fields based on scoping keywords in the constructor, so I avoid them. I also use the (admittedly, confusing) `#` prefix for private fields and members of a class.

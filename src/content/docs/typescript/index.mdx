@@ -1,3 +1,44 @@
 ---
-title: The TypeScript Programming Language
+title: TypeScript For Angular Developers
+position: 1
 ---
+
+
+In this course we are going to take an *opinionated* look at the TypeScript programming language. 
+
+We will emphasize the idiomatic use of TypeScript in the context of Angular development.
+
+TypeScript is, of course, used in a lot of other contexts, including building server-side applications with Node.js, mobile applications with React Native, and desktop applications with Electron. However, this course will focus on TypeScript as it is used in Angular applications.
+
+## Developer Productivity 
+
+When you are *cranking* on an Angular application - perhaps designing beautiful components, or a whole feature, you are working in the world of "User Interface". One thing is certain about UI work - it is *subjective* as heck. You will get a *lot* of feedback. Some of it will be from you, some of it will be from others. You want to set yourself up to be able to iterate quickly.
+
+Many (most?) strictly-typed languages (like Java, C#, etc.) require a lot of boilerplate code. This is code that you have to write to satisfy the compiler, but that doesn't actually do anything useful. This boilerplate code can slow you down when you are trying to iterate quickly.
+TypeScript is designed to be a *lightweight* layer on top of JavaScript. It adds static types and some other features, but it doesn't require a lot of boilerplate code. This makes it a great choice for UI development, where you want to be able to iterate quickly.
+TypeScript is also designed to be *gradually* or *eventually* typed. This means that you can start with a JavaScript codebase and gradually add types as you go. This is a great way to get started with TypeScript, and it allows you to take advantage of the benefits of static typing without having to rewrite your entire codebase.
+
+
+## Not All TypeScript is Created Equal
+
+The TypeScript code you find in a component, or within a feature in a service or directive, or whatever else in strictly an *implementation detail* of the presented user interface.
+
+Angular is a framework for creating user interface. The UI is really the *only thing that matters*. Does the UI work as expected? Does it look good? Is it performant? Does it meet the requirements?
+
+When working "close to the skin" of your application, which you often are, you want *feedback* from the compiler when you make a mistake, and so we will use TypeScript's type system to help us catch mistakes early.
+
+When you are working on any kind of *shared* code the rules might be different. 
+
+Shared Code Is:
+- Code that is used by multiple features in your application
+    - This includes "Utility" or "core" code that is shared across the features of your application
+- Code that is used by multiple applications (as NPM packages, for example)
+
+As you will see, code that lives in the *shared* realm has different requirements than code that lives in the *implementation* realm. Your use of TypeScript on this type of code will often be different than the TypeScript code used within a small component or service. 
+You may use more *advanced* features of TypeScript, like Generics, Mapped Types, and Conditional Types. You may write functions where you *type* the return type. 
+
+The goal here is to have two things:
+- A safety net to show, through compiler feedback, that you haven't changed the functionality of the code in a way that will break the consumers of the code
+- A clear and unambiguous API that is easy to understand and use
+
+We will write both kinds of code in this course.
