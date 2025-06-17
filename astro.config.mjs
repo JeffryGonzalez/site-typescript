@@ -11,7 +11,7 @@ export default defineConfig({
       starlight({
           title: 'TypeScript',
           customCss: [ './src/styles/global.css' ],
-          social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+          social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/JeffryGonzalez/site-typescript' }],
           plugins: [starlightAutoSidebar(), catppuccin(), starlightImageZoom()],
           sidebar: [
               { label: 'TypeScript', autogenerate: { directory: 'typescript' } },
