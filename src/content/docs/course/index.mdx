@@ -1,0 +1,76 @@
+---
+title: The Course
+---
+
+This 3-day course is intended for moderately experienced Angular developers.
+
+## The Flow 
+
+Here is the expected flow of the course:
+
+### Infrastructure
+We will *have to* spend a little time talking about the ambient environment in which we work. You can get pretty far in Angular without knowing much about Node, NPM, or even how the TypeScript code that makes up our application is compiled and delivered to the browser. But *some* knowledge of these things will be helpful, and impact how we write, structure, and test our code.
+
+Topics:
+- JavaScript and TypeScript
+- Modules
+- Node and NPM
+- Dependency Management
+
+### Application Development 
+
+We make our money, so to speak, by building applications. An implementation detail of this, if you are building your applications in Angular, is that you are going to have to write some code. That code will be some combination of:
+
+- HTML (Angular Templates)
+- CSS (Styles)
+- TypeScript (Angular Components, Services, Tests, etc.)
+- Configuration
+  - `tsconfig.json`
+  - `angular.json`
+  - `eslint.json`
+
+Obviously, this course is going to focus primarily on the code we write with TypeScript, but we will also touch on the other topics as they relate to Angular development.
+
+### Shared Code 
+
+Usually, as application developers, we are writing *very specific* things. We create, for example, components that are used in a specific portion of your application. 
+
+> "Our component needs an Angular service that fetches data from a REST API, and we need to write that service. We need to format some of the output from that service to the user, so we'll create a pipe to do that. We need to display some of that data in a table, so we'll create a component for that."
+And, Oh, now they want that button in "cornflower blue" instead of "azure", so we need to change the CSS.
+
+That kind of thing. But sometimes we are working in a more *general* mode. For example:
+
+- We need to create a service that provides information about the current user across our application.
+- We need an Angular Pipe that formats product SKU numbers according to our company's standards.
+- We need an Angular HTTP Interceptor that adds the `authorization` header to all outgoing HTTP requests to specific APIs.
+- We need some general utility functions that we can use in our components and services.
+- We need a component that displays a "spinner" while data is being loaded.
+- We need a component that displays a "toast" message when an error occurs.
+
+Often these kind of things begin "life" as a specific thing created as part of a specific requirement. But then other developers on your team start to use it all over the application. And then it becomes a "shared" piece of code that is used in many places.
+
+You know this because you made a litle change to the code to satisfy a new requirement, and see you get build errors all over the application because nobody else on your team knew that you were making that change.
+
+We want to take "shared" stuff seriously. 
+
+That means:
+
+- We want to write it in a way that is *general* enough to be used in many places.
+- We want to write it in a way that is *testable* and we will have tests for it that not only detect regresions, but also document how the code is supposed to work.
+- We want to write it in a way that is *maintainable* and we can change it without breaking other code.
+  - This is where some more *advanced* TypeScript features come in, like Generics, Mapped Types, and Conditional Types come in.
+
+### The Limits of TypeScript 
+
+We need to have a talk about this. TypeScript is great, but it kind of doesn't actually *exist* in any meaningful way in the browser. It is a *development time* tool that helps us write better code, but it doesn't actually do anything at runtime.
+
+Sometimes TypeScript can lull you into a false sense of security. You can write code that is "type safe" and "type checked" but that doesn't actually do what you think it does at runtime.
+
+We will explore some of the ways we can "harden" our application code when it is in the "real world", by using things like:
+- Runtime Type Checking
+  - Type Assertions and Guards 
+- Validation
+ - Form Validation
+ - Using Libraries like `zod` or `io-ts`
+- Error Handling
+

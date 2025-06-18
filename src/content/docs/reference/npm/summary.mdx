@@ -1,5 +1,6 @@
 ---
 title: Summary (TLDR)
+position: 30
 ---
 
 import { Badge } from '@astrojs/starlight/components';
@@ -44,3 +45,7 @@ But this means you have to *test*. Angular is *pretty* stable these days. Most p
 ### <Badge text="MAYBE" variant="caution" /> Consider Using *overrides* in `package.json` to Force Specific Versions of Packages
 
 This is a more advanced topic, but sometimes a package you are installing has a dependency on a package that is out of date or has a security vulnerability. You can use the `overrides` field in `package.json` to force a specific version of a package to be used, regardless of what other packages specify. Use this with caution, but it can help in a pinch. [Overrides at NPM](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides)
+
+### <Badge text="MAYBE" variant="caution" /> Avoid Global NPM Packages
+
+Global NPM packages can cause version conflicts and make it difficult to manage dependencies. If you need a package globally, consider using `npx` to run it without installing it globally. If you must install a package globally, use `npm install -g <packagename>` but be aware of the potential issues.

@@ -14,6 +14,7 @@ export default defineConfig({
           social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/JeffryGonzalez/site-typescript' }],
           plugins: [starlightAutoSidebar(), catppuccin(), starlightImageZoom()],
           sidebar: [
+            {label: 'Course', autogenerate: { directory: 'course' }},
               { label: 'TypeScript', autogenerate: { directory: 'typescript' } },
               {label: 'Reference', autogenerate: { directory: 'reference'}}
           ],

@@ -1,0 +1,26 @@
+--- 
+title: Some NPM commands
+position: 20
+---
+
+Other than the `npm install`, etc. we talked about earlier, there are a few other NPM commands that are useful to know about.
+
+## `npx`
+`npx` is a command that comes with NPM and allows you to run Node.js packages without installing them globally. This is useful for running one-off commands or scripts without cluttering your global NPM space.
+
+For example, instead of doing this to get a global web server:
+
+```bash
+npm install -g http-server
+```
+You can use `npx` to run it directly:
+
+```bash
+npx http-server
+```
+
+This will download the `http-server` package, run it, and then remove it when it's done. This is particularly useful for running tools that you don't need to keep installed permanently. (It caches the package though).
+
+## `npm ls` 
+
+`npm ls` is a command that lists all the installed packages in your project, along with their dependencies. This is useful for understanding the structure of your project's dependencies and for debugging issues related to package versions
