@@ -1,0 +1,84 @@
+---
+title: Validation with Zod
+---
+
+[Zod](https://zod.dev/) is a TypeScript-first schema declaration and validation library. It allows you to define schemas for your data and validate that data against those schemas. Zod is often used in Angular applications for form validation, API response validation, and more.
+
+You can install Zod via npm:
+
+```bash
+npm install zod
+```
+
+## Defining Schemas
+
+You can define a schema using Zod's built-in types. For example, to define a schema for a user object:
+
+```typescript
+import { describe, expect, it } from 'vitest';
+import * as z from 'zod';
+describe('zod stuff', () => {
+  it('defining a schema', () => {
+    const userSchema = z.object({
+      id: z.number(),
+      name: z.object({
+        first: z.string(),
+        last: z.string(),
+        middle: z.string().optional(),
+      }),
+    });
+
+    const userData = {
+      id: 1,
+      name: {
+        first: 'John',
+        last: 'Doe',
+      },
+    };
+    const badUserData = { name: { first: 'John', last: 'Doe' } };
+    const parsedData = userSchema.parse(userData);
+    expect(parsedData).toEqual(userData);
+
+    expect(() => userSchema.parse(badUserData)).toThrow();
+
+    const resultGood = userSchema.safeParse(userData);
+    expect(resultGood.success).toBe(true);
+
+    const resultBad = userSchema.safeParse(badUserData);
+    expect(resultBad.success).toBe(false);
+    expect(resultBad.error?.errors[0].message).toBe('Required');
+    expect(resultBad.error?.errors[0].path).toEqual(['id']);
+  });
+});
+```
+
+You can infer types from the schema using `z.infer`. This is useful for ensuring type safety throughout your application, while having validations for external data.
+
+
+```typescript ins={10} mark="User"
+it('inferring schema', () => {
+    const userSchema = z.object({
+      id: z.number(),
+      name: z.object({
+        first: z.string(),
+        last: z.string(),
+        middle: z.string().optional(),
+      }),
+    });
+    type User = z.infer<typeof userSchema>;
+    const userData: User = {
+      id: 1,
+      name: {
+        first: 'John',
+        last: 'Doe',
+      },
+    };
+    // @ts-expect-error missing id
+    const badUserData: User = {
+      name: {
+        first: 'John',
+        last: 'Doe',
+      },
+    };
+  });
+  ```

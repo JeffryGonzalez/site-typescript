@@ -1,0 +1,253 @@
+---
+title: Functional JavaScript
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+In JavaScript (therefor, in TypeScript), functions are *first-class citizens*. This means that functions can be treated like any other value. They can be assigned to variables, passed as arguments to other functions, and returned from other functions.
+
+There is no intermediary required like a delegate or function pointer. Functions are just values.
+
+In the previous section we looked at "higher order functions", which are functions that take other functions as arguments or return functions as their result. You see this a *lot* in JavaScript and in Angular.
+
+## JavaScript Array Methods 
+
+In JavaScript, arrays come with a number of built-in methods that allow you to manipulate and transform the data in the array. Many of these methods take functions as arguments, allowing you to define custom behavior for how the array should be processed.
+
+### map()
+
+The `map` method creates a new array by applying a function to each element of the original array. The function you provide is called for each element, and the return value of the function is used to create the new array.
+
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(num => num * 2);
+console.log(doubled); // [2, 4, 6, 8, 10]
+```
+
+### filter()
+The `filter` method creates a new array containing only the elements that satisfy a given condition. The function you provide should return `true` for elements that should be included in the new array, and `false` for those that should be excluded.
+
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+const evenNumbers = numbers.filter(num => num % 2 === 0);
+console.log(evenNumbers); // [2, 4]
+```
+
+### forEach()
+The `forEach` method executes a provided function once for each array element. It does not return a new array, but is often used for side effects, such as logging or modifying external state
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+numbers.forEach(num => console.log(num * 2));
+// Output:
+// 2
+// 4    etc.
+```
+
+### reduce()
+The `reduce` method applies a function against an accumulator and each element in the array (from left to right) to reduce it to a single value.
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+const sum = numbers.reduce((accumulator, current) => accumulator + current, 0);
+console.log(sum); // 15
+```
+Many of these functions, like `forEach`, can have a function that takes several arguments. The first argument is the current element, the second argument is the index of the current element, and the third argument is the array itself.
+
+```typescript
+const numbers = [10, 20, 30];
+numbers.forEach((element, index, arr) => {
+    console.log(`Element at index ${index} is ${element} in array [${arr}]`);
+});
+// Output:
+// Element at index 0 is 10 in array [10,20,30]
+// Element at index 1 is 20 in array [10,20,30]
+// Element at index 2 is 30 in array [10,20,30]
+```
+
+Reduce can be really useful, and not just for the cliched example of summing numbers. You can use it to transform an array into an object, or to group items by a certain property.
+
+```typescript
+  it('reduce example', () => {
+    // Given a night of bowling with the Gonzalez family... 
+    const bowlingScores = [
+      { player: 'Jeff', score: 154 },
+      { player: 'Stacey', score: 187 },
+      { player: 'Henry', score: 133 },
+      { player: 'Violet', score: 133 },
+    ];
+
+   // We want to derive from this a "GameResults" object that contains the winners, high score, losers, and low score.
+    type GameResults = {
+      winners: string[];
+      highScore: number;
+      lowScore: number;
+      losers: string[];
+    };
+
+    // We create an initial value for the accumulator of the reduce function - there are no winners or losers yet, and the high score is the lowest possible, and the low score is the highest possible.
+    const initialResults: GameResults = {
+      winners: [],
+      highScore: -1, // The high score in bowling is 300.
+      lowScore: 301, // The low score in bowling is 0.
+      losers: [],
+    };
+
+    const results = bowlingScores.reduce((acc, curr) => {
+      // We have a new high score! - or a tie.
+      if (curr.score > acc.highScore) {
+        acc.highScore = curr.score;
+        acc.winners = [curr.player];
+      } else if (curr.score === acc.highScore) {
+        // if it is a tie, just add the player to the list of winners.
+        acc.winners.push(curr.player);
+      }
+
+      // We have a new low score! - or a tie.
+      if (curr.score < acc.lowScore) {
+        acc.lowScore = curr.score;
+        acc.losers = [curr.player];
+      } else if (curr.score === acc.lowScore) {
+        // if they are tied, just add the player to the list of losers.
+        acc.losers.push(curr.player);
+      }
+
+      return acc;
+    }, initialResults);
+
+    expect(results.winners).toEqual(['Stacey']);
+    expect(results.highScore).toBe(187);
+    expect(results.losers).toEqual(['Henry', 'Violet']);
+    expect(results.lowScore).toBe(133);
+  });
+  ```
+
+  ### Flattening arrays
+
+  You can use `flat` or `flatMap` to flatten nested arrays.
+
+  ```typescript
+    it('flattening arrays', () => {
+    const rounds = [
+      [
+        { player: 'Jeff', score: 154 },
+        { player: 'Stacey', score: 187 },
+      ],
+      [
+        { player: 'Henry', score: 300 },
+        { player: 'Stacey', score: 133 },
+      ],
+    ];
+    const allScores = rounds.flat();
+    expect(allScores.length).toBe(4);
+  });
+```
+
+## Arrays are Mutable
+
+JavaScript arrays are mutable, meaning that you can change their contents. This can lead to unexpected behavior if you are not careful. Especially when you mix in Angular's change detection. We generally avoid mutation functions.
+
+### Mutating functions
+
+These functions change the original array.
+- `push()`: Adds one or more elements to the end of an array and returns the new length of the array.
+- `pop()`: Removes the last element from an array and returns that element.
+- `shift()`: Removes the first element from an array and returns that element.
+- `unshift()`: Adds one or more elements to the beginning of an array and returns the new length of the array.
+- `splice()`: Changes the contents of an array by removing or replacing existing elements and/or adding new elements in place.
+- `sort()`: Sorts the elements of an array in place and returns the sorted array.
+- `reverse()`: Reverses the order of the elements of an array in place and returns the reversed array.
+
+### Alternatives to Mutating Functions
+
+#### Adding elements
+
+Instead of `push`, use the spread operator to create a new array with the new element(s).
+
+```typescript
+const arr = [1, 2, 3];
+const newArr = [...arr, 4]; // [1, 2, 3, 4]
+```
+#### Removing elements
+Instead of `pop`, `shift`, or `splice`, use `filter` to create a new array without the unwanted element(s).
+
+```typescript
+const arr = [1, 2, 3];
+const newArr = arr.filter(num => num !== 3); // [1, 2]
+``` 
+#### Updating elements
+Instead of modifying an element directly, use `map` to create a new array with the updated element(s).  
+
+```typescript
+const arr = [1, 2, 3];
+const newArr = arr.map(num => num === 2 ? 20 : num); // [1, 20, 3]
+``` 
+#### Sorting elements
+Instead of `sort`, use the spread operator to create a new array and then sort that new array.  
+
+```typescript
+const arr = [3, 1, 2];
+const newArr = [...arr].sort(); // [1, 2, 3]
+```
+
+### New Methods in ES2023
+
+ES2023 introduced some new array methods that can be useful for functional programming. These methods do not mutate the original array, but instead return a new array.
+- `toReversed()`: Returns a new array with the elements in reverse order.
+- `toSorted()`: Returns a new array with the elements sorted.
+- `toSpliced()`: Returns a new array with elements added or removed, similar to `splice`, but without mutating the original array.
+- `with()`: Returns a new array with a specified element replaced at a given index.
+
+```typescript
+  it('using toSorted', () => {
+    const numbers = [5, 3, 9, 1, 4];
+    const sorted = numbers.toSorted((a, b) => a - b);
+
+    expect(numbers).toEqual([5, 3, 9, 1, 4]); // Original array is unchanged
+    expect(sorted).toEqual([1, 3, 4, 5, 9]);
+  });
+  ``` 
+
+  <Aside type="caution">
+    These methods are relatively new and may not be supported in all environments. Be sure to check compatibility if you plan to use them in production code.
+
+    Also, you will need to enable the `ES2023` lib in your `tsconfig.json` file.
+
+    Visual Studio Code will still often give you a case of the "red squigglies" until the TypeScript team updates their version of the language service.
+    </Aside>
+
+Again, with warning and caution, you can update your TSConfig file to include the `ES2023` lib.
+
+```json ins="ES2023"
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2023",
+    "module": "preserve",
+    "lib": ["ES2023", "ES2023.Array", "DOM"]
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "typeCheckHostBindings": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}
+
+```
+
+A Good starting place to see what is supported from ES2023 (and other versions), See [Can I Use](https://caniuse.com/?search=es2023)

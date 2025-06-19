@@ -1,0 +1,217 @@
+---
+title: Miscellaneous Syntax
+---
+
+There are a few other bits of JavaScript/TypeScript that don't easily fall into other categories, but you should be aware of.
+
+## The Ternary Operator
+
+The ternary operator is a shorthand way of writing an `if-else` statement. It takes three operands: a condition, a value to return if the condition is true, and a value to return if the condition is false.
+
+```typescript
+const age = 20;
+const canVote = age >= 18 ? 'Yes' : 'No';
+console.log(canVote); // 'Yes'
+```
+This is equivalent to:
+
+```typescript
+let canVote: string; 
+if (age >= 18) {
+    canVote = 'Yes';
+} else {
+    canVote = 'No';
+}
+console.log(canVote);
+```       
+
+## Returning Object Literals 
+
+When returning an object literal from an arrow function that is an expression, you need to wrap the object in parentheses. This is because the curly braces `{}` are interpreted as the start of a function body, not an object literal.
+
+```typescript
+const createPerson = (name: string, age: number) => ({ name, age });
+const person = createPerson('Alice', 30);
+console.log(person); // { name: 'Alice', age: 30 }
+```
+
+### Object Literal Shorthand 
+
+When the property name and variable name are the same, you can use shorthand syntax to create object literals.
+
+```typescript
+const name = 'Alice';
+const age = 30;
+const person = { name, age }; // same as { name: name, age: age }
+console.log(person); // { name: 'Alice', age: 30 }
+```
+### Using the Spread Operator with Objects
+
+You can use the spread operator (`...`) to copy properties from one object to another.
+
+```typescript
+const person = { name: 'Alice', age: 30 };
+const updatedPerson = { ...person, age: 31 }; // creates a new object with updated age
+console.log(updatedPerson); // { name: 'Alice', age: 31 }
+```
+
+### Using the Spread Operator with Arrays
+
+You can also use the spread operator to copy elements from one array to another.
+
+```typescript
+const numbers = [1, 2, 3];
+const moreNumbers = [...numbers, 4, 5]; // creates a new array with additional elements
+console.log(moreNumbers); // [1, 2, 3, 4, 5]
+```
+### Optional Chaining
+Optional chaining (`?.`) allows you to safely access deeply nested properties of an object without having to check if each reference in the chain is valid.
+
+```typescript
+const user = {
+    name: 'Alice',
+    address: {
+        street: '123 Main St',
+        city: 'Wonderland'
+    }
+};      
+console.log(user.address?.city); // 'Wonderland'
+console.log(user.contact?.phone); // undefined (no error)
+```
+
+### Truthiness and Falsiness
+
+In JavaScript/TypeScript, certain values are considered "truthy" or "falsy" when evaluated in a boolean context. Here are some common examples:
+- **Falsy values**: `false`, `0`, `''` (empty string), `null`, `undefined`, `NaN`
+- **Truthy values**: All values that are not falsy, including non-empty strings, non-zero numbers, objects, arrays, etc.
+
+This means you can use any object in a conditional statement:
+
+```typescript
+const name = 'Alice';
+if (name) {
+    console.log('Name is truthy');
+} else {
+    console.log('Name is falsy');
+}
+// Output: 'Name is truthy'
+```
+### Nullish Coalescing Operator
+The nullish coalescing operator (`??`) allows you to provide a default value when dealing with `null` or `undefined`. It returns the right-hand operand when the left-hand operand is `null` or `undefined`, otherwise it returns the left-hand operand.
+
+```typescript
+const name = null;
+const displayName = name ?? 'Guest';
+console.log(displayName); // 'Guest'
+```
+
+### Object Destructuring
+
+Object destructuring allows you to extract properties from an object and assign them to variables in a concise way.
+
+```typescript
+const person = { name: 'Alice', age: 30 };
+const { name, age } = person; // same as const name = person.name; const age = person.age;
+console.log(name); // 'Alice'
+console.log(age);  // 30
+```
+
+You can also rename variables during destructuring:
+
+```typescript
+const { name: personName, age: personAge } = person;
+console.log(personName); // 'Alice'
+console.log(personAge);  // 30
+```
+
+### Array Destructuring
+
+Array destructuring allows you to extract elements from an array and assign them to variables in a concise way.
+
+```typescript
+const numbers = [1, 2, 3];
+const [first, second, third] = numbers; // same as const first = numbers[0]; const second = numbers[1]; const third = numbers[2];
+console.log(first); // 1
+console.log(second); // 2
+console.log(third); // 3
+```
+
+### Tuple Types
+
+Tuple types allow you to define an array with a fixed number of elements, where each element can have a different type.
+
+This seems a bit *weird* for programmer's coming from another language, but in JavaScript/TypeScript, tuples are just arrays with a fixed length and known types for each element. They are "typed arrays". 
+
+```typescript
+const person: [string, number] = ['Alice', 30]; // first element is a string, second is a number
+const [name, age] = person;
+console.log(name); // 'Alice'
+console.log(age);  // 30
+```
+### Type Assertions
+
+Type assertions allow you to tell the TypeScript compiler to treat a value as a specific type. This is useful when you know more about the type of a value than the compiler does.
+
+```typescript
+  it('type assertions', () => {
+    const someValue: unknown = 'Hello, world!';
+    const strLength: number = (someValue as string).length; // assert that someValue is a string
+    expect(strLength).toBe(13);
+  });
+```
+
+The `as` operator is you telling the TypeScript compiler "I know better than you do". Use it sparingly, as it can lead to runtime errors if you are wrong.
+
+A better way to do this might be:
+
+```typescript
+it('better type assertion', () => {
+    const someValue: unknown = 'Hello, world!';
+    if (typeof someValue === 'string') {
+      const strLength: number = someValue.length; // TypeScript now knows it's a string
+      console.log(strLength); // 13
+      expect(strLength).toBe(13);
+    } else {
+      throw new Error('Not a string!');
+    }
+
+    const person: unknown = {
+      name: 'Alice',
+      age: 30,
+      address: {
+        street: '123 Main St',
+        city: 'Wonderland',
+      },
+    };
+    if (typeof person === 'object' && person !== null && 'name' in person) {
+      const name = (person as { name: string }).name;
+      expect(name).toBe('Alice');
+    } else {
+      throw new Error('Not a person!');
+    }
+  });
+  ```
+
+TypeScript has a nice way to clean this sort of thing up using [user-defined type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates):
+
+```typescript ins="value is string"
+  it('type guards', () => {
+    function isString(value: unknown): value is string {
+      return typeof value === 'string';
+    }
+
+    function processValue(value: string | number) {
+      if (isString(value)) {
+        // Here, TypeScript knows `value` is a string
+        return value.toUpperCase();
+      } else {
+        // Here, TypeScript knows `value` is a number
+        return value.toFixed(2);
+      }
+    }
+
+    expect(processValue('hello')).toBe('HELLO');
+    expect(processValue(3.14159)).toBe('3.14');
+  });
+```
+

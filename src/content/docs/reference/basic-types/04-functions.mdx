@@ -2,6 +2,8 @@
 title: Functions
 ---
 
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
 There are two main ways to define functions in TypeScript: function declarations and arrow functions. Both can be used interchangeably, but arrow functions have some differences in how they handle the `this` keyword.
 
 
@@ -95,3 +97,206 @@ const result2 = performOperation(subtract, 5, 3);
 const result3 = performOperation((a, b) => a * b, 5, 3);
 console.log({result, result2, result3})); // { result: 8, result2: 2, result3: 15 }
 ```
+
+## Arguments to Functions
+
+### Optional and Default Parameters
+
+You can make parameters optional by adding a `?` after the parameter name. Optional parameters must come after all required parameters.
+
+```typescript
+function greet(name: string, greeting?: string) {
+    return `${greeting || "Hello"}, ${name}!`;
+}
+console.log(greet("Alice")); // "Hello, Alice!"
+console.log(greet("Bob", "Hi")); // "Hi, Bob!"
+```
+
+Note that unlike some languages, TypeScript does not support "named parameters" - you must pass parameters in the order they are defined. So default parameters are listed last, and are used if the caller does not provide a value.
+
+```typescript del={10}
+ it('example 2 - named parameters bad', () => {
+    function greet(name: string, greeting = 'Hello', upper = false) {
+      const greetMessage = `${greeting}, ${name}!`;
+      return upper ? greetMessage.toUpperCase() : greetMessage;
+    }
+
+    expect(greet('Alice')).toBe('Hello, Alice!');
+    expect(greet('Bob', 'Hi')).toBe('Hi, Bob!');
+    expect(greet('Charlie', 'Hey', true)).toBe('HEY, CHARLIE!');
+    // expect(greet('Dave', upper: true)).toBe('HELLO, DAVE!');
+  });
+```
+#### Optional Parameters
+Optional Parameters can be indicated with the `?` (sus) suffix, but should be listed after all required parameters.
+
+```typescript ins="?"
+ it('optional parameters', () => {
+    function buildName(firstName: string, lastName?: string) {
+      return lastName ? `${firstName} ${lastName}` : firstName;
+    }
+
+    expect(buildName('John', 'Doe')).toBe('John Doe');
+    expect(buildName('Jane')).toBe('Jane');
+  });
+```
+
+#### Destructured Parameters
+A common pattern is to make *monoidal* functions that take a single argument object. This borders of *utility folder* functions, but it is handy to know:
+
+```typescript
+it('destructured parameters', () => {
+    function createUser({ name, age }: { name: string; age: number }) {
+      return { name: name.toUpperCase(), age: age + 1 };
+    }
+
+    const { name, age } = createUser({ name: 'Alice', age: 30 });
+
+    expect(name).toBe('ALICE');
+    expect(age).toBe(31);
+  });
+```
+
+#### Rest Parameters
+
+The final argument of a function can be an array of values, using the `...` syntax. This is called a "rest parameter".
+
+```typescript
+  it('rest parameters', () => {
+    function sum(start = 0, ...numbers: number[]) {
+      return numbers.reduce((acc, curr) => acc + curr, start);
+    }
+
+    expect(sum(1, 2, 3)).toBe(6);
+    expect(sum(10, 20, 30, 40)).toBe(100);
+    expect(sum()).toBe(0);
+    expect(sum(5, 2, 3)).toBe(10);
+  });
+``` 
+
+### Higher Order Functions
+
+Higher order functions are functions that take other functions as arguments or return functions as their result.
+
+```typescript
+  it('higher-order functions', () => {
+    function sum(predicate: (n: number) => boolean, ...numbers: number[]) {
+      return numbers.filter(predicate).reduce((acc, curr) => acc + curr, 0);
+    }
+
+    const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    expect(sum((n) => n % 2 === 0, ...numbers)).toBe(30);
+    const isOdd = (n: number) => n % 2 !== 0;
+    expect(sum(isOdd, ...numbers)).toBe(25);
+  });
+```
+A more advanced example is a function that returns a function:
+
+```typescript
+  it('function returning a function', () => {
+    function makeMultiplier(factor: number): (n: number) => number {
+      return (n: number) => n * factor;
+    }
+
+    const double = makeMultiplier(2);
+    const triple = makeMultiplier(3);
+
+    expect(double(5)).toBe(10);
+    expect(triple(5)).toBe(15);
+  });
+```
+
+Or, maybe more practical, but introducing some testing mocks:
+
+```typescript
+  it('higher-order functions 2', () => {
+    function logWithPrefix(prefix: string) {
+      return function (message: string) {
+        console.log(`${prefix}: ${message}`);
+      };
+    }
+    const consoleMock = vi
+      .spyOn(console, 'log')
+      .mockImplementation(() => undefined);
+
+    const infoLogger = logWithPrefix('INFO');
+    infoLogger('This is an informational message.');
+
+    expect(consoleMock).toHaveBeenCalledWith(
+      'INFO: This is an informational message.',
+    );
+
+    const featureLogger = logWithPrefix('Feature 1');
+
+    featureLogger('Feature 1 is working!');
+    expect(consoleMock).toHaveBeenCalledWith(
+      'Feature 1: Feature 1 is working!',
+    );
+    consoleMock.mockRestore();
+  });
+```
+
+#### Function Overloading 
+
+Overloading means having one function that can accept a variety of different inputs. Much of the usefulness of this can be accomplished by using union types, discriminated unions, and destructured parameters, however, it is used a lot in libraries, and does 
+provide good editor feedback.
+
+```typescript del={19}
+it('function overloads', () => {
+    function combine(a: string, b: string): string;
+    function combine(a: number, b: number): number;
+    function combine(a: unknown, b: unknown): unknown {
+      if (typeof a === 'string' && typeof b === 'string') {
+        return a + b;
+      }
+      if (typeof a === 'number' && typeof b === 'number') {
+        return a + b;
+      }
+      throw new Error('Invalid arguments');
+    }
+
+    const combinedStrings = combine('Hello, ', 'World!');
+    expect(combinedStrings).toBe('Hello, World!');
+    const combinedNumbers = combine(10, 20);
+    expect(combinedNumbers).toBe(30);
+    // @ts-expect-error can't combine string and number
+    combine('dog', 5);
+  });
+```
+## Modules: Exporting and Importing Functions
+
+In TypeScript, each file is treated as a separate module. You can export functions, types, and values from a module and import them into another module.
+
+Modules (just TypeScript files) can export multiple functions, types, and values. You can use the `export` keyword to make a function available outside the module.
+
+They can also export a single "default" function, type, or value using the `export default` syntax. 
+
+<Aside type="tip">We don't often use `export default` in Angular code for some reason. It is more common to use named exports.</Aside>
+
+<Tabs>
+    <TabItem label="utils.ts">
+
+        ```typescript
+        export const add = (a: number, b: number): number => a + b;
+
+        export default (a: number, b: number): number => a - b;
+        ```
+    </TabItem>
+    <TabItem label="utils.spec.ts">
+
+        ```typescript
+        import { describe, expect, it } from 'vitest';
+        import subby, { add } from './utils';
+        describe('feature-two/utils', () => {
+            it('should be able to use the add function', () => {
+                expect(add(2, 3)).toBe(5);
+            });
+            it('should be able to use the subtract function', () => {
+                expect(subby(5, 2)).toBe(3);
+            });
+        });
+    ```
+
+    </TabItem>
+
+</Tabs>
