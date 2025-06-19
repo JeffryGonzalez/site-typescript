@@ -1,0 +1,330 @@
+---
+title: Linting
+sidebar:
+  order: 30
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+When Angular 2 was first released, new Angular projects that were created using the Angular CLI included a tool called TSLint. TSLint was a static analysis tool that checked your TypeScript code for potential errors and enforced coding standards.
+
+However, TSLint has been deprecated in favor of ESLint, which is a more popular and widely used linting tool for JavaScript and TypeScript. ESLint provides a more flexible and extensible framework for linting, and has a larger ecosystem of plugins and rules. This is largely a result of TypeScript and JavaScript (ES) becoming more similar over time. In other words, we can use the same linting tool for both languages.
+
+When TS Lint was deprecated, the Angular team quit generating projects with any linting tool or rules at all. 
+
+## What is Linting?
+
+Linting is the process of analyzing your code for potential errors, coding standards, and best practices. A linter is a tool that performs this analysis and provides feedback on your code. It works at a much more *subjective* level than a compiler. A compiler checks your code for syntax errors and type errors, while a linter checks your code for things like:
+
+- Consistent formatting (e.g. indentation, spacing, etc.)
+- Naming conventions (e.g. variable names, function names, etc.)
+- Best practices (e.g. avoiding certain patterns, using certain features, etc.)
+- Potential errors (e.g. unused variables, unreachable code, etc.)
+
+Linting is a *personal* thing for a team. 
+
+The Angular team does have a set of recommended ESLint rules that you can use as a starting point for your own projects.  
+
+## Setting up ESLint in an Angular Project
+
+The Angular CLI support *schematics*, which are basically scripts that can modify your project and/or install NPM packages. There is a schematic for adding ESLint to an existing Angular project. You can run the following command to add ESLint to your project:
+
+```bash
+ng add @angular-eslint/schematics
+```
+
+This will install the necessary NPM packages and modify your project to use ESLint. It will also create a default ESLint configuration file (`eslint.config.js`) in the root of your project.
+
+```js title="./eslint.config.js"
+// @ts-check
+const eslint = require("@eslint/js");
+const tseslint = require("typescript-eslint");
+const angular = require("angular-eslint");
+
+module.exports = tseslint.config(
+  {
+    files: ["**/*.ts"],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...tseslint.configs.stylistic,
+      ...angular.configs.tsRecommended,
+    ],
+    processor: angular.processInlineTemplates,
+    rules: {
+      "@angular-eslint/directive-selector": [
+        "error",
+        {
+          type: "attribute",
+          prefix: "app",
+          style: "camelCase",
+        },
+      ],
+      "@angular-eslint/component-selector": [
+        "error",
+        {
+          type: "element",
+          prefix: "app",
+          style: "kebab-case",
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/*.html"],
+    extends: [
+      ...angular.configs.templateRecommended,
+      ...angular.configs.templateAccessibility,
+    ],
+    rules: {},
+  }
+);
+```
+
+It's a pretty minimal configuration, with most of the rules being inherited from the recommended sets. You can customize this file to add or remove rules as needed.
+
+Once you have ESLint set up in your project, you can run the following command to lint your code:
+
+```bash 
+ng lint
+```
+
+### Adding or Overriding Rules in ESLint 
+
+ESLint rules have three levels of severity:
+- `off` or `0` - turn the rule off
+- `warn` or `1` - turn the rule on as a warning (doesn't affect exit code)
+- `error` or `2` - turn the rule on as an error
+
+You can override a rule (unless this has been disallowed by another rule) for an individual line of source code by adding a comment like this:
+
+```ts
+// eslint-disable-next-line no-console
+console.log("This will not cause a linting error");
+```
+
+You can override a rule for an entire file by adding a comment like this at the top of the file:
+
+```ts
+/* eslint-disable no-console */
+console.log("This will not cause a linting error");
+console.log("This will not cause a linting error either");
+```
+
+You can also override (or add) rules in the `eslint.config.js` file.
+
+These are *global* for the project, so they will apply to all files that match the `files` pattern.
+
+For example, the recommended Angular ESLint rules say that when declaring a type, you should use `interface` instead of `type`:
+
+I don't agree with this rule, and I think it is overly restrictive. So I can turn it off like this:
+
+```js title="./eslint.config.js" ins={17}
+// @ts-check
+const eslint = require("@eslint/js");
+const tseslint = require("typescript-eslint");
+const angular = require("angular-eslint");
+
+module.exports = tseslint.config(
+  {
+    files: ["**/*.ts"],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.recommended,
+      ...tseslint.configs.stylistic,
+      ...angular.configs.tsRecommended,
+    ],
+    processor: angular.processInlineTemplates,
+    rules: {
+      "@typescript-eslint/consistent-type-definitions": "off",
+      "@angular-eslint/directive-selector": [
+        "error",
+        {
+          type: "attribute",
+          prefix: "app",
+          style: "camelCase",
+        },
+      ],
+      "@angular-eslint/component-selector": [
+        "error",
+        {
+          type: "element",
+          prefix: "app",
+          style: "kebab-case",
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/*.html"],
+    extends: [
+      ...angular.configs.templateRecommended,
+      ...angular.configs.templateAccessibility,
+    ],
+    rules: {},
+  }
+);
+```
+
+You can create your own rules as well, and even publish them as a package to share across projects.
+
+A good place to start is the [ESLint documentation](https://eslint.org/docs/latest/developer-guide/working-with-rules).
+
+However, you can also use the `no-restricted-syntax` rule to disallow certain syntax patterns. 
+
+Here is a rule I often use to give a warning when the `@Injectable()` decorator is used.  See [Services](https://applied-angular.hypertheory.com/adr/services/) here for an explanation as to why this can be a problem in *modern* Angular applications.
+
+```js title="./eslint.config.js" lineNumbers=false
+  "no-restricted-syntax": [
+        "warn",
+        {
+          selector: "CallExpression[callee.name='Injectable']",
+          message:
+            "Are you sure you don't want to just create a provider for this?",
+        },
+      ],
+```
+
+This rule will give a warning whenever the `@Injectable()` decorator is used in the code. The `selector` property uses [ESLint's AST selector syntax](https://eslint.org/docs/latest/developer-guide/working-with-rules/selector-syntax) to match the `CallExpression` node with a `callee` property that has a `name` of `Injectable`.
+
+The Angular Team introduces rules like this to help us migrate from older patterns in Angular to newer patterns.
+
+For example, Angular 20 added a recommended rule to warn when using constructor injection (instead of using the `inject()` function). This is to help us migrate away from constructor injection, which has been the standard way of injecting dependencies in Angular since the beginning.
+
+<img src="/eslint.png" alt="ESLint Warning for Constructor Injection"  />
+
+Note: The warning on the `@Injectable()` decorator is from the rule created above. The warning on the constructor parameter is from the Angular team's recommended rule.
+
+## Using ESLint Rules in VSCode
+
+If you are using [VSCode](https://code.visualstudio.com/), you can install the [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) to get real-time feedback on your code as you type. The extension will use the `eslint.config.js` file in your project to determine which rules to apply. It also often provides quick fixes for common issues.
+
+I recommend you enable the following settings in VSCode to get the most out of the ESLint extension:
+
+```json title="settings.json"
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
+```
+
+## Other "Linting"-Like Tools 
+
+This gets a little confusing. There are several tools that provide similar functionality to linting. These tools are created by different teams, and have overlapping concerns.
+
+While TSLint and ESLint have the ability to enforce *formatting* rules, ESLint has moved away from this responsibility. When I am talking about formatting, I mean things like whether we prefer single quotes or double quotes, whether we use semicolons or not, how many spaces to use for indentation, etc.
+
+### EditorConfig
+[EditorConfig](https://editorconfig.org/) is a tool that helps maintain consistent coding styles between different editors and IDEs. It is not a linter, but it can be used to enforce consistent formatting across different editors.
+
+EditorConfig *overwrites* your IDEs default settings while you have this project open (and are using an EditorConfig-compatible IDE). 
+
+I think the Angular team's default `.editorconfig` is pretty adequate:
+
+```ini title="./.editorconfig"
+# Editor configuration, see https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.ts]
+quote_type = single
+ij_typescript_use_double_quotes = false
+
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+```
+
+### TsConfig 
+Even the `tsconfig.json` file can have some rules that are similar to linting rules. I recommend *not* using any formatting rules in `tsconfig.json`.
+
+### Prettier
+[Prettier](https://prettier.io/) is a code formatter that automatically formats your code according to a set of rules. It is not a linter, but it can be used in conjunction with ESLint to ensure that your code is both formatted and linted correctly.
+
+While prettier can have it's own set of rules, one nice feature is that it can read the `eslint.config.js` file and use the rules defined there to format your code. This can help ensure that your code is both formatted and linted correctly.
+
+I recommend you install the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) in VSCode to get real-time feedback on your code as you type. The extension will use the `eslint.config.js` file in your project to determine which rules to apply. It also often provides quick fixes for common issues.
+
+Install the `prettier` NPM package in your project (as a dev dependency):
+
+```bash
+npm install -D prettier
+```
+
+And update your `settings.json` file in VSCode to include the following settings:
+
+```json title="settings.json"
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.format": "always"
+  }
+}
+```
+
+
+<Aside type="note">
+If you are using VSCode, you can add a `settings.json` file to the `.vscode` folder in your project to share these settings with your team whenever they open the project in VSCode.
+
+With an Angular project, depending on your version of Angular, this file may be ignored in your `.gitignore` file. You may need to remove it from there. (Angular 20 does not ignore this file by default.)
+
+</Aside>
+
+## Advanced ESLint Configuration 
+
+You have to be somewhat careful with ESLint rules. You don't want to put the most authoritarian, anal-retentive person in charge of this. You want to have a discussion with your team about which rules to use, and why.
+
+One problem we can help mitigate when building Angular applications that can be addressed through linting is related to "team dynamics". 
+
+What I mean by this is that in a larger application, there will often be several developers or even teams of developers working on different parts of the application. They will be iterating at different speeds.
+
+For example, if one developer is working on a feature related to user onboarding, they might create code to implement this feature, like service, components, pipes, stores, etc. 
+
+If a developer working on a different feature imports code from the onboarding feature, they can run into a few  different problems:
+- The onboarding feature is still in flux, and the API is changing frequently. The developers of the onboarding feature might make changes that break the code in the other feature.
+- The onboarding feature is not yet complete, and the developers of the other feature might be relying on code that is not yet implemented.
+- Even *if* the code "borrowed" from the onboarding feature is stable, the developers of the other feature might not understand how to use it correctly, or every time the onboarding feature is updated, it will require the new feature to be updated as well (a new bundle will be produced).
+
+In my projects, I like to create some *conventions* for how code is structured and shared across the application.
+
+And then I like to use ESLint rules to enforce these conventions.
+
+You can read a more detailed explanation of this in my article on [Angular Big Project Structure](https://www.jeffrygonzalez.dev/posts/big-angular-app-structure).
+
+### Enter the Sheriff
+
+There is a great open-source library that extends [Sheriff](https://sheriff.softarc.io/docs/installation). You can follow the instructions to configure and install it in your project.
+
+Here is my default `sheriff.config.js` file:
+
+```js title="./sheriff.config.js"
+import { SheriffConfig, sameTag } from '@softarc/sheriff-core';
+
+export const config: SheriffConfig = {
+  autoTagging: true,
+  enableBarrelLess: true,
+  modules: {
+    'src/features/<domain>': ['domain:<domain>', 'type:feature'],
+    'src/app': ['domain:app', 'type:app'],
+    'src/shared': ['type:shared'],
+  }, // apply tags to your modules
+  depRules: {
+    'type:feature': [sameTag, 'type:shared'],
+    'domain:app': [sameTag, 'type:shared', 'type:feature'],
+    'domain:*': [sameTag, 'type:shared'],
+    'type:app': [sameTag, 'type:feature', 'type:shared'],
+    'type:shared': [sameTag],
+    root: ['type:app'],
+  },
+};
+
+```
