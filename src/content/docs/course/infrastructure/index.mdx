@@ -1,0 +1,52 @@
+---
+title: Infrastructure
+sidebar:
+  order: 20
+---
+
+import { Aside, LinkCard } from '@astrojs/starlight/components';
+
+When we develop Angular applications, our goal, our *deliverable* is pretty simple: We need to produce an HTML file (`index.html`) that contains a `<script>` tag that points to our JavaScript bundle (e.g. `main.js`, etc.), and a `<link>` tag that points to our CSS file (e.g. `styles.css`). This is the *output* of our Angular application.
+
+You put that stuff on a web server somewhere, and when the user requests the `index.html`, the JavaScript, CSS, and other assets are downloaded to the browser, and the application runs.
+
+Simple, right? 
+
+In order to do that, we need a *local development environment* where we can build and test our application.
+
+Then we need a way to build our application for production, which is a process that optimizes the code and prepares it for deployment.
+
+| Need | Development Environment | Production Environment |
+|------|-------------------------|------------------------|
+| Local server to serve files | A local server (http://localhost:4200) | Yes, but a *real* server (Nginx, etc.) |
+| Compiler For TypeScript | Yes, `tsc` | No, just static files |
+| Compiler for HTML templates | Yes, Angular compiler (Ivy) | No, just static files |
+| Compiler for CSS | Maybe (SCSS, etc.) | No, just static files |
+| Build process | Yes, using Angular CLI | No, just static files |
+| Linting | Yes, EsLint | No, just static files |
+| Testing | Yes, using Karma/Jasmine | No, just static files |
+| Testing | Yes | No, just static files |
+
+## The Development Environment
+
+When you run your Angular application locally, under the hood[^1] Angular is using a local development server called [Vite](https://vitejs.dev/). This server serves your application files, compiles TypeScript and HTML templates, and provides live reloading when you make changes to your code.
+
+Vite is fantastic. It is *fast*, and allows for "Hot Module Replacement" (HMR), which means that when you make changes to your code, the browser automatically updates without a full page reload. This makes development much more efficient. Especially when you have *state* in your application. You can *often* make changes to the HTML templates, CSS, and even TypeScript code, and see the changes immediately in the browser without losing the current state of your application.
+
+During *development*, Vite using modules to load your application files. This means that when you import a module in your TypeScript code, Vite will load that module and its dependencies on demand. This is great for development, but not suitable for production. If you are working on your Angular application and look in the network tab of your browser's developer tools, you will see that Vite is loading many small files, each representing a module. This is because Vite is designed to be fast and efficient during development, not for production.
+
+## The Build Process 
+
+<Aside type="caution">The code you are running during development is not the same code that you will run in production. The development server (Vite) uses modules to load your application files, while the production build process bundles everything into a few large files. You should be testing against a *production* build of your application.</Aside>
+
+When you are ready to deploy your application, you need to build it for production. This is where the Angular CLI comes in. The CLI provides a command called `ng build` that compiles your application and produces the output files that you can deploy to a web server.
+When you build your application (e.g. `ng build`), Angular uses a combination of [ESBuild](https://esbuild.github.io/) and Vite to bundle and build your application - optimizing the code as much as possible, and producing the smallest possible output files. This process includes:
+- **Tree Shaking**: Removing unused code from your application.
+- **Minification**: Reducing the size of your JavaScript and CSS files by removing whitespace, comments, and shortening variable names.
+- **Code Splitting**: Breaking your application into smaller chunks that can be loaded on demand, rather than loading everything at once.
+
+### NPM and Node.js
+
+<LinkCard title="NPM and Node.js" href="/reference/npm/" />
+
+[^1]: This is since Angular 17. Prior to that, Angular used the [Angular CLI](https://angular.io/cli) which used Webpack under the hood.
