@@ -1,0 +1,262 @@
+---
+title: Generics
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Since I keep talking about writing "general" code, I think a good place to start is with generics. I mean, **it's the same root word**. A generic is a type that can be used with other type of data. It's a way to write code that is flexible and reusable.
+
+<Aside type="caution">
+Generics scare folks. They can be a bit of a mind-bender, and the similarity of generics with other programming languages can lead to confusion. But they are a powerful tool in TypeScript that can help you write more flexible and reusable code.
+</Aside>
+
+## Example One 
+
+Let's start easy. Let's say you have a function that takes an array of numbers and returns the first number in the array. You might write it like this:
+
+```typescript
+
+function head(numbers: number[]): number {
+    return numbers[0];
+}
+
+const first = head([10,20,30,8]);
+console.log(first);
+```
+
+Later on, you realize that you want to do the same thing with an array of strings. You could write a new function like this:
+
+```typescript
+function headStrings(strings: string[]): string {
+    return strings[0];
+}
+const firstString = headStrings(['apple', 'banana', 'cherry']);
+console.log(firstString);
+```
+
+You *could* use a union type to make a single function that works with both numbers and strings, but that would be a bit clunky:
+
+```typescript
+function head(numbers: (number| string)[]): (number | string) {
+    return numbers[0];
+}
+
+const first = head([10,20,30,8]);
+console.log(first);
+```
+
+This is limiting for a couple of reasons. 
+
+1. It only works with numbers and strings, so if you want to use it with other types, you have to modify the function.
+2. It doesn't give you the type safety on the return value. You are going to have to use a type assertion to get the type you want. 
+
+Here's the *generic* version of the function:
+
+```typescript
+function head<T>(values: T[]): T {
+    return values[0];
+}
+
+const first = head([118.583, 20.2387, 3.1415972]);
+console.log(first.toFixed(2));
+
+const firstString = head(['Dog', 'Cat', 'Mouse']);
+console.log(firstString.toUpperCase());
+```
+
+The thing in the *angle brackets* is the generic type parameter. It can be any type, and it will be inferred from the argument you pass to the function.
+
+I *Know* it is confusing because it's just a single letter, and you don't *have* to use just a single letter, but it's part of the *vibe* of generics. I think it's because they come from math, and in math, we often use single letters to represent variables. So that it is confusing.
+
+You could rewrite it like this if that makes you happy. I wouldn't throw it out of a code review:
+
+```typescript
+
+
+function head<TypeOfTheElementsInTheArray>(values: TypeOfTheElementsInTheArray[]): TypeOfTheElementsInTheArray {
+    return values[0];
+}
+
+const first = head([118.583, 20.2387, 3.1415972]);
+console.log(first.toFixed(2));
+
+const firstString = head(['Dog', 'Cat', 'Mouse']);
+console.log(firstString.toUpperCase());
+```
+
+A *bit* of a problem with our generic function is that it doesn't work if you call it with an empty array. It's going to return `undefined', and TypeScript won't be able to tell you that. You can fix that by adding a type guard:
+
+```typescript ins={11,12}
+function head<TypeOfTheElementsInTheArray>(values: TypeOfTheElementsInTheArray[]): TypeOfTheElementsInTheArray {
+    return values[0];
+}
+
+const first = head([118.583, 20.2387, 3.1415972]);
+console.log(first.toFixed(2));
+
+const firstString = head(['Dog', 'Cat', 'Mouse']);
+console.log(firstString.toUpperCase());
+
+const thirdString = head([]);
+console.log(thirdString) // undefined
+```
+
+We can fix this so we get a *compile-time error* if we try to call the function with an empty array by using *yet another generic*, but this time a Generic Type.
+
+
+```typescript del={14}
+type NonEmptyArray<T> = [T, ...T[]];
+
+function head<T>(values: NonEmptyArray<T>): T {
+    return values[0];
+}
+
+const first = head([118.583, 20.2387, 3.1415972]);
+console.log(first.toFixed(2));
+
+const firstString = head(['Dog', 'Cat', 'Mouse']);
+console.log(firstString.toUpperCase());
+
+// @ts-expect-error 
+const thirdString = head([]);
+
+```
+
+That type: `type NonEmptyArray<T> = [T, ...T[]];` looks a bit weird, but it is saying that this type will "apply" to anything that is an array of anything, that has at least one of those anythings, but could have more than one of those anythings. But not less.
+
+<Aside type="caution">
+Constantly repeat the mantra, though: "None of this exists at runtime". If you are creating this a function like this, and you are using it in a library that maybe JavaScript users are going to use, or more likely, you won't be calling it with a *literal* array of anything, you might want to add a check and throw or something.
+
+```typescript ins={4,5,6}
+type NonEmptyArray<T> = [T, ...T[]];
+
+function head<T>(values: NonEmptyArray<T>): T {
+    if(values.length === 0) {
+        throw new Error('Cannot get an element from an empty array');
+    }
+    return values[0];
+}
+```
+</Aside>
+
+Let's look at another example.
+
+## KeyOf 
+
+Let's say we have a list of friends:
+
+```typescript
+const friends = {
+    'bob': { name: 'Bob Smith', email: 'bob@aol.com'},
+    'sue': { name: 'Jill Jones', email: 'jill@aol.com'}
+};
+```
+
+And let's say we want to create an array of the friends we need to call, but we want to make sure that:
+1. We don't add a friend that doesn't exist in the `friends` object.
+2. We don't accidentally add a friend twice.
+
+The second part is pretty easy. JavaScript has a `Set` type that will only allow unique values. The first part is a bit trickier, but we can use a generic type to make sure that we only add friends that exist in the `friends` object. If you add another thing with the same value, it just replaced the old one.
+
+The first part is a little trickier. We need to *tell* the set that the values we are adding are keys of the `friends` object. We can do that with a generic type:
+
+```typescript del={13}
+const friends = {
+    'bob': { name: 'Bob Smith', email: 'bob@aol.com'},
+    'sue': { name: 'Jill Jones', email: 'jill@aol.com'}
+};
+
+type FriendKeys = keyof typeof friends;
+
+const friendsToCall = new Set<keyof typeof friends>();
+
+friendsToCall.add('bob');
+friendsToCall.add('sue');
+friendsToCall.add('bob');
+// friendsToCall.add('brad');
+
+console.log(friendsToCall); // ['sue', 'bob']
+```
+
+Line 13 will give us a compile-time error. 
+
+## Another Advance Example
+
+Here's an example of a generic function that will safely get a property from an object, ensuring that the key exists on the object and that the type of the value is preserved:
+
+```typescript
+
+function getProperty<T, K extends keyof T>(obj: T, key: K) {
+    return obj[key];
+}
+
+
+const person = {
+    id: '11',
+    name: 'Bob Smith',
+    age: 53,
+    jobs: ['Janitor', 'Teacher']
+}
+ 
+const personName = getProperty(person, 'name');
+
+const personAge = getProperty(person, 'age');
+
+```
+
+You can take this further:
+
+```typescript
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
+
+const person = {
+    id: '11',
+    name: 'Bob Smith',
+    age: 53,
+    jobs: ['Janitor', 'Teacher']
+}
+ 
+
+function pluck<T, K extends keyof T>(obj: T, ...keys: K[]) {
+    return keys.reduce((prev, current) => {
+        return {
+            ...prev,
+            [current]: obj[current]
+        }
+    }, {} as Prettify<Pick<T, K>>)
+}
+
+const justParts = pluck(person, 'name', 'age');
+const onlyJobs = pluck(person, 'jobs');
+
+console.log({justParts, onlyJobs})
+```
+
+## Utility Types
+
+The TypeScript compiler has a set of built-in utility types that can help you work with generics and other types more easily. Some of the most commonly used utility types include:
+
+[See Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)
+
+Some of the most useful ones are:
+- `Partial<T>`: Makes all properties of type `T` optional.
+- `Required<T>`: Makes all properties of type `T` required.
+- `Readonly<T>`: Makes all properties of type `T` read-only.
+- `Record<K, T>`: Creates an object type with keys of type `K` and values of type `T`.
+- `Pick<T, K>`: Creates a type by picking a set of properties `K` from type `T`.
+- `Omit<T, K>`: Creates a type by omitting a set of properties `K` from type `T`.
+- `NonNullable<T>`: Creates a type that excludes `null` and `undefined` from type `T`.
+- `ReturnType<T>`: Gets the return type of a function type `T`.
+- `Parameters<T>`: Gets the parameters of a function type `T` as a tuple type.
+
+It also has some string manipulation types that can be useful for working with strings in a type-safe way:
+- `Uppercase<T>`: Converts a string literal type `T` to uppercase.
+- `Lowercase<T>`: Converts a string literal type `T` to lowercase.
+- `Capitalize<T>`: Capitalizes the first letter of a string literal type `T`.
+- `Uncapitalize<T>`: Uncapitalizes the first letter of a string literal type `T`.
+
+<Aside type="note">
+These are hard to see the value of out of a context, so we will do a lot of this in our Angular code
+</Aside>

@@ -1,0 +1,66 @@
+---
+title: Advanced Types
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+I've learned that saying *advanced* **anything** is a bit of a landmine in teaching.
+
+Folks go a couple of different ways when that term in used.
+
+Some people think "Well, this is advanced, so I don't need to know it yet."
+
+Others think "This is advanced, so I need to learn it right now and use this stuff all over the place in my code so I look *awesome* and *smart*."
+
+The first one is *more* true than the second one, but both are kind of wrong.
+
+The reason I break this out into its own section is because these are the things you might do to make your code *better*, but usually only *after* you have proven the code in a specific context.
+
+These are about making your code more flexible, more reusable, and more maintainable, and more *general*.
+
+You are *not* doing anything wrong if you are writing code, for example, in a component, and you don't use a lot of these features. As a matter of fact, the *less* of this stuff you use, the more likely it is that you are writing code that is easy to understand and maintain.
+
+When you are in "applying" mode as an application developer - that is, you are writing code to solve a specific problem - you are not trying to make your code *general*.
+You are trying to make your code *specific* to the problem you are solving.
+
+When you are in "library" or "utility" or "shared" mode, you are trying to make your code *general* so that it can be used in many different contexts.
+
+## Pop Quiz
+
+Which of the following do you find the most preferable?
+
+1. Having your code blow up in production because of a coding error?
+2. Writing a bunch of low-level tests that you have to maintain forever, and update every time you change your code?
+    - And your pipeline keeps getting slower and slower because of all the tests?
+3. Getting "red squiggly lines" in your editor that tell you when you are doing something wrong, and then fixing it before you even run the code?
+
+I *hope* you picked #3.
+
+## TypeScript as a Testing Tool
+
+This is what TypeScript is all about. I think it is totally appropriate to think of TypeScript as a "testing tool" rather than a "programming language" in the same way that you think of Jest or Mocha or Vitest as a "testing tool".
+
+The benefit of TypeScript as a testing tool is the *feedback loop* is much faster than the feedback loop of running tests (or waiting to see if it blows up in production).
+
+In TypeScript we use *types* to "limit the domain of what is possible" in our code. For example, if you have a function that takes a string as an argument, TypeScript will tell you if you try to pass it a number. Big deal. 
+
+But let's say you have a function that takes a string as an argument, but that string is used to look up a customer in the state of the application.
+
+It might look like this:
+
+```typescript
+function getCustomerById(id: string) {
+  return state.customers[id];
+}
+```
+If you pass it a number, TypeScript will tell you that is wrong. But what if you pass it a string that is not a valid customer ID? TypeScript can't tell you that.
+
+Except it *can*, with a little *type wizardry* (We'll cover this in this section, spoiler: It's called "branded types").
+
+<Aside type="note">
+There isn't as clear of a line between "application developer" and "library developer" as I make it sound here. You can be both at the same time, and you can be one or the other at different times in your career.
+
+What I want you to be aware of is that much of the stuff we've already covered is "advanced" (like discriminated unions, for example). But you use that kind of thing to solve a specific problem in your code **after you've already figured it out**.
+
+I'll admit, I often use these techniques *after* I've had some kind of issue. They are a way to *harden* your code, and to *document* the proper use of your code.
+</Aside>
