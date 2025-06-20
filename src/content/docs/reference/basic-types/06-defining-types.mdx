@@ -172,3 +172,256 @@ sendMessage(person, "Hello Alice!");
 ```
 
 This is an example of *structural typing*, where TypeScript checks that the object has the required properties and types, even if it is not explicitly defined as a type or interface.
+
+## Classes 
+
+TypeScript has great support for defining types with classes. Way more than I'll show here, actually, because we don't tend to use a lot of this style of coding in Angular.
+
+### A Bit About Classes, Scope and JavaScript
+
+TypeScript has an affordance where you can declare fields in a class constructor, and TypeScript will automatically create the corresponding properties on the class instance. This is a nice shorthand that saves you from having to declare the properties separately.
+
+However, it is just a TypeScript "thing". If you are using TypeScript to produce JavaScript that others will use (without TypeScript), there is no protection for those `private` properties.
+
+
+
+```typescript
+class Person {
+    constructor(public name:string, private age:number) {}
+
+    getInfo() {
+        return `Person ${this.name} is ${this.age}`;
+    }
+}
+```
+
+Produces the following JavaScript code:
+
+```javascript
+class Person {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    getInfo() {
+        return `Person ${this.name} is ${this.age}`;
+    }
+}
+```
+
+JavaScript also does not have field scoping modifiers. 
+
+`public` is the default, and so isn't usually specified. 
+
+If you use `private`, the TypeScript compiler *may* actually emit JavaScript code to simulate private properties. 
+
+For example, with this code:
+
+```typescript del={27}
+class BankAccount {
+
+   private balance: number;
+   constructor() {
+    this.balance = 0;
+   }
+
+   public deposit(amount:number) {
+    this.balance += amount;
+   }
+
+   public withdraw(amount: number) {
+    this.balance -= amount;
+   }
+   getBalance() {
+    return this.balance;
+   }
+}
+
+const myAccount = new BankAccount();
+
+myAccount.deposit(125.23);
+myAccount.withdraw(100.00);
+
+console.log(myAccount.getBalance());
+
+myAccount.balance = 5000;
+
+console.log(myAccount.getBalance())
+}
+```
+You *shouldn't* be able to access the `balance` property directly, but you can. The TypeScript compiler will show an error, but the JavaScript code will still allow it.
+
+In 2022, JavaScript introduced a new way to define private properties using the `#` syntax. This is not TypeScript specific, but it is worth noting because it is now part of the JavaScript language.
+
+```typescript
+class BankAccount {
+
+   #balance: number;
+   constructor() {
+    this.#balance = 0;
+   }
+
+   public Deposit(amount:number) {
+    this.#balance += amount;
+   }
+
+   public withdraw(amount: number) {
+    this.#balance -= amount;
+   }
+   getBalance() {
+    return this.#balance;
+   }
+}
+
+const myAccount = new BankAccount();
+
+myAccount.Deposit(125.23);
+myAccount.withdraw(100.00);
+
+
+console.log(myAccount.getBalance());
+
+// myAccount.#balance = 5000;
+
+console.log(myAccount.getBalance())
+```
+
+This will produce a JavaScript error if you try to access the `#balance` property directly, as it is now truly private to the class. 
+
+As a matter of fact the TypeScript compiler, if you set the `target` to equal to earlier than `ES2022`, it will emit JavaScript code that uses a "wrapper" to protect these properties.
+
+That same code above (for the class) will emit the following JavaScript:
+
+```javascript
+"use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _balance;
+class BankAccount {
+    constructor() {
+        _balance.set(this, void 0);
+        __classPrivateFieldSet(this, _balance, 0);
+    }
+    Deposit(amount) {
+        __classPrivateFieldSet(this, _balance, __classPrivateFieldGet(this, _balance) + amount);
+    }
+    withdraw(amount) {
+        __classPrivateFieldSet(this, _balance, __classPrivateFieldGet(this, _balance) - amount);
+    }
+    getBalance() {
+        return __classPrivateFieldGet(this, _balance);
+    }
+}
+```
+
+See [Private Properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties) for more information on this new feature.
+
+<Aside type="note">
+My recommendation is to use the `#` syntax for private properties in TypeScript, as it is the most future-proof and aligns with the latest JavaScript standards. 
+
+Using the constructor shorthand is fine, but be aware that it is just a TypeScript feature and does not provide any runtime protection in JavaScript for anything other than `public` (because `public` is the default). I rarely use it.
+
+There is no notion of `protected` in JavaScript, but it is in TypeScript. It is a way to allow access to properties and methods from subclasses, but not from outside the class hierarchy. Again, it will note emit any JavaScript code to enforce this, so it is purely a TypeScript feature.
+
+A couple points:
+- using the `#` syntax, you will get a runtime error if you try to access a private property from outside the class. (Normally you would get an `undefined`).
+- The rule is relaxed in the developer tools. You *Can* access private properties in the console, but you will get an error if you try to access them in your code.
+</Aside>
+
+### Classes Implementing Interfaces
+
+You can also use interfaces to define the structure of a class. This is useful for ensuring that a class adheres to a specific contract.
+
+```typescript
+  it('example 2 - class with inteface', () => {
+    interface ProvidesInformation {
+      getInfo(): string;
+    }
+    class Employee implements ProvidesInformation {
+      name: string;
+      position: string;
+
+      constructor(name: string, position: string) {
+        this.name = name;
+        this.position = position;
+      }
+
+      getInfo() {
+        return `${this.name} is a ${this.position}.`;
+      }
+    }
+
+    class Product implements ProvidesInformation {
+      getInfo(): string {
+        return 'This is a product.';
+      }
+    }
+
+    const employee = new Employee('Bob', 'Software Engineer');
+    const product = new Product();
+
+    function displayInfo(item: ProvidesInformation) {
+      return item.getInfo();
+    }
+    expect(displayInfo(employee)).toBe('Bob is a Software Engineer.');
+    expect(displayInfo(product)).toBe('This is a product.');
+  });
+```
+
+However, keep in mind that TypeScript does not enforce the implementation of interfaces at runtime. 
+
+It is *structurally typed*, meaning that as long as the class has the required properties and methods, it will satisfy the interface.
+
+The following code will work just as well:
+
+```typescript
+ it('example 2 - class with inteface', () => {
+    interface ProvidesInformation {
+      getInfo(): string;
+    }
+    class Employee {
+      name: string;
+      position: string;
+
+      constructor(name: string, position: string) {
+        this.name = name;
+        this.position = position;
+      }
+
+      getInfo() {
+        return `${this.name} is a ${this.position}.`;
+      }
+    }
+
+    class Product {
+      getInfo(): string {
+        return 'This is a product.';
+      }
+    }
+
+    const employee = new Employee('Bob', 'Software Engineer');
+    const product = new Product();
+
+    function displayInfo(item: ProvidesInformation) {
+      return item.getInfo();
+    }
+    expect(displayInfo(employee)).toBe('Bob is a Software Engineer.');
+    expect(displayInfo(product)).toBe('This is a product.');
+  });
+});
+```
+
+<Aside type="tip">
+Study this example. It's part of you your key to TypeScript mastery.
+</Aside>
