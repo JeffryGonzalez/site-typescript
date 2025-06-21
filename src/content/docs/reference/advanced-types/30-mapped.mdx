@@ -1,3 +1,248 @@
 ---
 title: Mapped Types
 ---
+
+import { Aside } from '@astrojs/starlight/components';
+
+
+A powerful way to create new types based on existing ones is through **mapped types**. Mapped types allow you to transform properties of an existing type into a new type.
+
+If you are coming from a strictly-typed language like Java or C#, you will be *amazed* at this.
+
+I have a practical example of this for Angular developers. 
+
+If you are using `ReactiveForms` in Angular, a few versions ago they released type safety for the `FormGroup` and `FormControl` classes.
+
+You can provide generic type parameters for the `FormGroup` and `FormControl` classes, and they will infer the types of the properties in the form group.
+
+Internally they are using mapped types to create the types for the form group and form control classes, so you can access their values with type safety (instead of the `form.controls.get('name').value` syntax).
+
+With this, you can get direct access to the controls in the form group with type safety, like this:
+
+```typescript del={13,14} ins={15,16}
+export class AddUser {
+  form = new FormGroup({
+    name: new FormControl<string>('', { nonNullable: true }),
+    email: new FormControl<string>('', { nonNullable: true }),
+    nickName: new FormControl<string>('', { nonNullable: true }),
+    auth: new FormGroup({
+      password: new FormControl<string>('', { nonNullable: true }),
+      confirmPassword: new FormControl<string>('', { nonNullable: true }),
+    }),
+  });
+
+  submit() {
+    const pwdBefore = this.form.get('auth')?.get('password')?.value;
+    console.log(pwdBefore);
+    const pwd = this.form.controls.auth.controls.password.value;
+    console.log(pwd);
+  }
+}
+```
+
+This is a big win, but I still don't like the fact that I often have my own type that represents the form data, and want to use that to create a type for the form group based on that. That way if I change something on the type, I'll get build errors on the form.
+
+Let's say I have a type that represents the user data:
+
+```typescript
+    type Signup = {
+      name: string;
+      email: string;
+      nickName: string | null; // doesn't like optional types. those stink anyhow.
+      auth: {
+        password: string;
+        confirmPassword: string;
+      };
+    };
+```
+
+I *cannot* pass this directly to the `FormGroup`s type parameter, because it needs the properties to be instances of `FormControl` or `FormGroup`, not just plain types.
+
+So I would have to *manually* create a type that represents the form group, like this:
+
+```typescript
+type SignupForm = {
+  name: FormControl<string>;
+  email: FormControl<string>;
+  nickName: FormControl<string | null>;
+  auth: FormGroup<{
+    password: FormControl<string>;
+    confirmPassword: FormControl<string>;
+  }>;
+};
+```
+
+Now I have two "sources of truth", and *still* have to implement the constructor for the FormGroup manually. 
+
+This is where mapped types can help.
+
+```typescript
+export type FormGroupType<T> = {
+  [K in keyof T]: T[K] extends object
+    ? FormGroup<FormGroupType<T[K]>>
+    : FormControl<T[K]>;
+};
+```
+
+This is so simple, I'm embarrassed to even try to explain it. If you'll indulge me, though.
+
+> Note: That was sarcasm. I hope. 
+
+The `FormGroupType` type takes a generic type parameter `T`, which represents the type of the form data. It then uses a mapped type to iterate over each property `K` in `T`.
+If the property type `T[K]` is an object, it creates a `FormGroup` with the type of the nested properties. If it is not an object, it creates a `FormControl` with the type of the property.
+This allows you to create a type that represents the form group based on the type of the form data, without having to manually create the type for the form group.
+
+So, you give it a type that represents the form data, and from that it creates a type that represents the form group.
+
+The `[K in keyof T]: ...` syntax is the mapped type syntax. It iterates over each property in the type `T`, and creates a new property in the new type with the same name and type. It's a "loop". 
+
+This is a recursive loop, because if it reaches a key (property) that is an object, it *calls itself* to create a new `FormGroup` with the type of the nested properties.
+
+Here's another sample to show show how you might use this:
+
+Let's say we have a `User` type like this:
+
+```typescript
+type User = {
+  id: string;
+  name: {
+    first: string;
+    last: string;
+  };
+  email: string | null;
+};
+```
+
+Maybe it is an entity we are keeping in a Signal Store or service and something like that.
+
+When we collect the data for a new user, we need a type just like that, but without the `id` property, because we don't have that yet. Maybe it is assigned by the API, or whatever.
+
+```typescript
+type UserCreate = Omit<User, 'id'>; //  { name: { first: string; last: string }; email: string | null; }
+```
+
+When we used our `FormGroupType` type, we can create a type for the form group like this:
+
+```typescript
+type UserFormGroup = FormGroupType<UserCreate>; // => { name: FormGroup<{ first: FormControl<string>; last: FormControl<string> }>; email: FormControl<string | null>; }
+```
+
+
+<Aside type="tip">
+This works great. However, if you "hover" over the type, you will not see everything expanded out.
+
+A common way to fix this used by *lots* of TypeScript developers is to use *another* mapped type to flatten and "pretty up" the type:
+
+```typescript title="prettify.ts"
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};
+```
+
+If you change the `FormGroupType` type to use `Prettify` like this:
+
+```typescript ins="Prettify<FormGroupType<T[K]>>"
+export type FormGroupType<T> = {
+  [K in keyof T]: T[K] extends object
+    ? FormGroup<Prettify<FormGroupType<T[K]>>>
+    : FormControl<T[K]>;
+};
+```
+
+Then you will see the type expanded out when you hover over it.
+
+<img src="/ts-hover2.png" alt="TypeScript hover over type with Prettify" />
+</Aside>
+
+### Back to the Example
+
+We can now create our form group based on this type and we get *full type safety*. If a property on our type (the User, or UserCreate), we'll get compile-time errors if we try to access a property that doesn't exist, or if we try to assign a value of the wrong type.
+
+```typescript
+  form = new FormGroup<UserFormGroup>({
+    name: new FormGroup({
+      first: new FormControl<string>('', { nonNullable: true }),
+      last: new FormControl<string>('', { nonNullable: true }),
+    }),
+    email: new FormControl<string | null>(''),
+  });
+  ```
+
+  So if we change our `User` type like this:
+```typescript del={7} ins={8, 9}
+type User = {
+  id: string;
+  name: {
+    first: string;
+    last: string;
+  };
+  email: string | null;
+  emailAddress: string | null;
+  birthdate: string 
+};
+```
+
+We'll get an error in our form group constructor because we are trying to access a property that doesn't exist on the `UserCreate` type:
+
+```typescript del={6}
+  form = new FormGroup<UserFormGroup>({
+    name: new FormGroup({
+      first: new FormControl<string>('', { nonNullable: true }),
+      last: new FormControl<string>('', { nonNullable: true }),
+    }),
+    email: new FormControl<string | null>(''),
+  });
+// Error: Property 'emailAddress' does not exist on type 'UserCreate'.
+```
+
+#### Creating a Helper to Implement The Type For You
+
+What we've seen is a *big* win for us. Using the type system to alert us to problems or changes in our code is a *huge* win.
+
+But I'm lazy, too. 
+
+Here's an example, building on top of this so that in the *easy* cases, we don't even have to write the constructor for the `FormGroup` ourselves.
+
+```typescript title="createFormGroup.ts"
+export function createFormGroup<T>(model: T): FormGroup<FormGroupType<T>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const group: any = {};
+  for (const key in model) {
+    if (typeof model[key] === 'object' && model[key] !== null) {
+      group[key] = createFormGroup(model[key]);
+    } else {
+      group[key] = new FormControl(model[key]);
+    }
+  }
+  return new FormGroup(group);
+}
+```
+
+You give this function a model that represents the form data, and it will return a `FormGroup` with the correct type.
+You can use it like this:
+
+```typescript
+//   form = new FormGroup<UserFormGroup>({
+//     name: new FormGroup({
+//       first: new FormControl<string>('', { nonNullable: true }),
+//       last: new FormControl<string>('', { nonNullable: true }),
+//     }),
+//     email: new FormControl<string | null>(''),
+//   });
+
+  const initial: UserCreate = {
+    name: {
+      first: '',
+      last: '',
+    },
+    email: null,
+  };
+  form = createFormGroup(this.initial);
+```
+I commented out the old way of creating the form group, and replaced it with the `createFormGroup` function.
+
+The `initial` is an instance of our `UserCreate` type, and we pass that to the `createFormGroup` function. 
+
+This kind of approach is used in a many libraries, like `@ngrx/store` with it's `ActionCreator` and `createReducer` functions, and in `@ngrx/signals` with its `withEntities` function.
+
+I don't find it an *every day* thing for my development, but it is a *powerful* tool to have in your toolbox when you need it because you are tired of writing the same code over and over again, or you want to make sure that your code is type-safe and maintainable.
