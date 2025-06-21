@@ -2,5 +2,150 @@
 title: Miscellaneous
 ---
 
+## Template Literal Types To Combine unions
+
+Let's say you have a type (`Book`) that has some properties you want to allow to be sorted upon. And you have a direction for the sort (`ascending` or `descending`). You can use template literal types to create a new type that combines these properties into a single string type.
+
+```typescript
+
+
+type Book = {
+    id: string;
+    title: string;
+    author: string;
+    yearReleased: number
+}
+
+type SortDirections = 'ascending' | 'descending';
+
+type SortableProps = keyof Omit<Book, 'id'>;
+     // ^?  "title" | "author" | "yearReleased"
+
+type Options = `${SortableProps}-${SortDirections}`
+// "title-ascending" | "title-descending" | "author-ascending" | "author-descending" | "yearReleased-ascending" | "yearReleased-descending"
+
+function sortBooksBy(sort:Options) {
+    switch(sort) {
+        case 'author-ascending':
+            // sort by author ascending
+            break;
+        case 'yearReleased-ascending': 
+            // sort by yearReleased ascending
+            break;
+        case 'author-descending':
+            break;
+        case 'title-ascending':
+            break;
+        case 'title-descending':
+            break;
+        case 'yearReleased-descending':
+            break;
+        default:
+           assertNever(sort);
+    }
+}
+function assertNever(value: never): never {
+    throw new Error(`Unhandled case: ${value}`);
+}
+
+```
+
+Line 13 is using a template literal type to combine the `SortableProps` with the `SortDirections` to create a new type that represents all the possible sort options.
+
+As a sort of fake example of how to use it, I added a `sortBooksBy` function that takes a `Options` type and uses a switch statement to handle the different sort options.
+
+That `default` case is a good example of how to use the `never` type to ensure that all cases are handled. If you add a new sort option, TypeScript will give you an error in the `assertNever` function because it is not handling that case.
+
+
 ## Using `as const` 
 
+Let's say you have an array of values. You want them as an array because you are going to do something like iterate over them in a template. 
+
+You also want a type that represents the values in the array. 
+
+Doing this will get you close, but as you can see the type is not what you want. The compiler can't ensure that the type is "stable" because it is an array. Even though we declared the array as `const`, remember that just means that the reference to the array is constant, not the values in the array.
+
+You can add the `as const` assertion to the array to make it a "readonly" array, which will get us closer.
+
+```typescript
+
+const COUNT_BY_VALUES = [1, 3, 5] as const;
+
+type CountByValues = keyof typeof COUNT_BY_VALUES;
+//  keyof readonly [1, 3, 5]
+```
+
+But what we want is a union type of `1 | 3 | 5`.
+
+We can get that with this syntax:
+
+> Note: for whatever reason, I can *never* remember this. I have to look it up every time. So, I am going to write it down here so I can find it again.
+
+```typescript
+
+const COUNT_BY_VALUES = [1, 3, 5] as const;
+
+type CountByValues = (typeof COUNT_BY_VALUES)[number];
+// 1 | 3 | 5
+```
+
+So, a more full example might look like this:
+
+```typescript
+
+const COUNT_BY_VALUES = [1, 3, 5] as const;
+
+type CountByValues = (typeof COUNT_BY_VALUES)[number];
+// 1 | 3 | 5
+
+function setCountBy(by:CountByValues) {
+    switch(by) {
+        case 1: 
+            console.log('Counting by one');
+            break;
+        case 3: 
+            console.log('Counting by three');
+            break;
+        case 5:
+            console.log('Counting by five');
+            break;
+        default:
+            assertNever(by);
+    }
+}
+
+function assertNever(value: never): never {
+    throw new Error(`Unhandled case: ${value}`);
+}
+```
+
+Again, that `assertNever` function is interesting. If we are coding this in TypeScript we should *never* hit that case, and so the error in the `assertNever` function will never be thrown. But if we add a new value to the `COUNT_BY_VALUES` array, TypeScript will give us an error in the `assertNever` function because it is not handling that case.
+
+Here if I insert a '7' into the `COUNT_BY_VALUES` array, TypeScript will give me an error in the `assertNever` function because it is not handling that case.
+
+```typescript ins="7" del={18}
+const COUNT_BY_VALUES = [1, 3, 5, 7] as const;
+
+type CountByValues = (typeof COUNT_BY_VALUES)[number];
+
+
+function setCountBy(by:CountByValues) {
+    switch(by) {
+        case 1: 
+            console.log('Counting by one');
+            break;
+        case 3: 
+            console.log('Counting by three');
+            break;
+        case 5:
+            console.log('Counting by five');
+            break;
+        default:
+            assertNever(by);
+    }
+}
+
+function assertNever(value: never): never {
+    throw new Error(`Unhandled case: ${value}`);
+}
+```
