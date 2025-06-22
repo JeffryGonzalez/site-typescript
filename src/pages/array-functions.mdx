@@ -1,0 +1,10 @@
+---
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+import  Blitz  from '../components/Blitz.astro'
+
+<StarlightPage frontmatter={{ title: 'Array Functions', template: 'splash' }}>
+
+<Blitz project="vitest-dev-vitest-kxrmohs1" file="test/suite.test.ts" client:load />
+</StarlightPage>
