@@ -1,0 +1,10 @@
+---
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+import  Blitz  from '../components/Blitz.astro'
+
+<StarlightPage frontmatter={{ title: 'Basic Types', template: 'splash' }}>
+
+<Blitz client:load />
+</StarlightPage>
